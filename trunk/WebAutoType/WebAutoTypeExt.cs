@@ -31,7 +31,10 @@ namespace WebAutoType
 		private IPluginHost m_host;
 		private const string c_sUrlPrefix = "??:URL:";
 		private const string OptionsConfigRoot = "WebAutoType.";
+		private const string UserNameAutoTypeSequenceStart = "{USERNAME}{TAB}";
+
 		private Dictionary<int,List<string>> m_dicStrings = new Dictionary<int, List<string>>();
+		private Dictionary<int, bool> mSkipUserNameForSequence = new Dictionary<int, bool>();
 		private EditAutoTypeItemForm m_fEditForm;
 		private string m_sLblText = string.Empty;
 		private ToolStripMenuItem mOptionsMenu;
@@ -75,11 +78,14 @@ namespace WebAutoType
 				options.MatchUrlField = MatchUrlField;
 				options.CreateEntryHotKey = CreateEntryHotKey;
 				options.CreateEntryTargetGroup = CreateEntryTargetGroup;
+				options.AutoSkipUserName = AutoSkipUserName;
+
 				if (options.ShowDialog(m_host.MainWindow) == DialogResult.OK)
 				{
 					MatchUrlField = options.MatchUrlField;
 					CreateEntryHotKey = options.CreateEntryHotKey;
 					CreateEntryTargetGroup = options.CreateEntryTargetGroup;
+					AutoSkipUserName = options.AutoSkipUserName;
 
 					// Unregister the old hotkey, and register the new
 					if (mCreateEntryHotkeyId != 0)
@@ -123,6 +129,12 @@ namespace WebAutoType
 			{
 				m_host.CustomConfig.SetString(OptionsConfigRoot + "CreateEntryTargetGroup", value == null ? "" : value.ToHexString()); 
 			}
+		}
+
+		private bool AutoSkipUserName
+		{
+			get { return m_host.CustomConfig.GetBool(OptionsConfigRoot + "AutoSkipUserName", false); }
+			set { m_host.CustomConfig.SetBool(OptionsConfigRoot + "AutoSkipUserName", value); }
 		}
 		#endregion
 
@@ -192,7 +204,9 @@ namespace WebAutoType
 
 		private void AutoType_SequenceQueriesBegin( object sender, SequenceQueriesEventArgs e )
 		{
-			string sUrl = WebBrowserUrl.GetFocussedBrowserUrl(e.TargetWindowHandle);
+			bool passwordFieldFocussed = false;
+
+			string sUrl = WebBrowserUrl.GetFocussedBrowserUrl(e.TargetWindowHandle, out passwordFieldFocussed);
 
 			if ( !string.IsNullOrEmpty( sUrl ) )
 			{
@@ -217,6 +231,7 @@ namespace WebAutoType
 				lock ( m_dicStrings )
 				{
 					m_dicStrings[e.EventID] = lstStrings;
+					mSkipUserNameForSequence[e.EventID] = passwordFieldFocussed && AutoSkipUserName;
 				}
 			}
 		}
@@ -231,12 +246,22 @@ namespace WebAutoType
 
 		private void AutoType_SequenceQuery( object sender, SequenceQueryEventArgs e )
 		{
+			string entryAutoTypeSequence = e.Entry.GetAutoTypeSequence();
+
 			List<string> lstStrings;
 			lock ( m_dicStrings )
 			{
 				if ( !m_dicStrings.TryGetValue( e.EventID, out lstStrings ) )
 				{
 					return;
+				}
+
+				bool skipUserName = false;
+				mSkipUserNameForSequence.TryGetValue(e.EventID, out skipUserName);
+
+				if (skipUserName && entryAutoTypeSequence.StartsWith(UserNameAutoTypeSequenceStart, StrUtil.CaseIgnoreCmp))
+				{
+					entryAutoTypeSequence = entryAutoTypeSequence.Substring(UserNameAutoTypeSequenceStart.Length);
 				}
 			}
 
@@ -283,13 +308,13 @@ namespace WebAutoType
 					{
 						if ( objRegex.IsMatch( s ) )
 						{
-							e.AddSequence( string.IsNullOrEmpty( association.Sequence ) ? e.Entry.GetAutoTypeSequence() : association.Sequence );
+							e.AddSequence( string.IsNullOrEmpty( association.Sequence ) ? entryAutoTypeSequence : association.Sequence );
 							break;
 						}
 					}
 					else if ( StrUtil.SimplePatternMatch( strUrlSpec, s, StrUtil.CaseIgnoreCmp ) )
 					{
-						e.AddSequence( string.IsNullOrEmpty( association.Sequence ) ? e.Entry.GetAutoTypeSequence() : association.Sequence );
+						e.AddSequence(string.IsNullOrEmpty(association.Sequence) ? entryAutoTypeSequence : association.Sequence);
 						break;
 					}
 				}
@@ -300,7 +325,7 @@ namespace WebAutoType
 				var url = e.Entry.Strings.GetSafe(KeePassLib.PwDefs.UrlField).ReadString();
 				if (!String.IsNullOrEmpty(url) && lstStrings.Any(s => s.StartsWith(url, StrUtil.CaseIgnoreCmp)))
 				{
-					e.AddSequence(e.Entry.GetAutoTypeSequence());
+					e.AddSequence(entryAutoTypeSequence);
 				}
 			}
 		}

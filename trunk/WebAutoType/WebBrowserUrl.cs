@@ -97,14 +97,19 @@ namespace WebAutoType
 		/// <summary>
 		/// Gets the URL from the browser with the current focus. If there is no current focus, falls back on trying to get the active URL from
 		/// the fallback top-level window handle specified.
+		/// 
+		/// If the current focus is detected to be in a password field, passwordFieldFocussed is set true.
 		/// </summary>
-		public static string GetFocussedBrowserUrl(IntPtr fallbackWindowHandle)
+		public static string GetFocussedBrowserUrl(IntPtr fallbackWindowHandle, out bool passwordFieldFocussed)
 		{
 			var focusedElement = AutomationElement.FocusedElement;
 			if (focusedElement == null)
 			{
+				passwordFieldFocussed = false;
 				return GetBrowserUrl(fallbackWindowHandle);
 			}
+
+			passwordFieldFocussed = focusedElement.Current.IsPassword;
 
 			var ffDocument = AncestorsOrSelf(focusedElement).FirstOrDefault(element => element.Current.ControlType == ControlType.Document);
 			if (ffDocument != null)

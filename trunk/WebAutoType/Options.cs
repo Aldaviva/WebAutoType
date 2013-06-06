@@ -48,6 +48,12 @@ namespace WebAutoType
 			set { mMatchURLField.Checked = value; }
 		}
 
+		public bool AutoSkipUserName
+		{
+			get { return mAutoSkipUsername.Checked; }
+			set { mAutoSkipUsername.Checked = value; }
+		}
+
 		public Keys CreateEntryHotKey
 		{
 			get { return mCreateEntryShortcutKey.HotKey | mCreateEntryShortcutKey.HotKeyModifiers; }
