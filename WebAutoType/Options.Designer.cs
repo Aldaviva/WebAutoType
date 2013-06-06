@@ -36,6 +36,7 @@
 			this.mMatchURLField = new System.Windows.Forms.CheckBox();
 			this.m_btnCancel = new System.Windows.Forms.Button();
 			this.m_btnOK = new System.Windows.Forms.Button();
+			this.mAutoSkipUsername = new System.Windows.Forms.CheckBox();
 			hotkeyLabel = new System.Windows.Forms.Label();
 			this.mCreateEntryGroupBox.SuspendLayout();
 			this.SuspendLayout();
@@ -57,7 +58,7 @@
 			this.mCreateEntryGroupBox.Controls.Add(this.mTargetGroupLabel);
 			this.mCreateEntryGroupBox.Controls.Add(hotkeyLabel);
 			this.mCreateEntryGroupBox.Controls.Add(this.mCreateEntryShortcutKeyTextBox);
-			this.mCreateEntryGroupBox.Location = new System.Drawing.Point(12, 35);
+			this.mCreateEntryGroupBox.Location = new System.Drawing.Point(12, 58);
 			this.mCreateEntryGroupBox.Name = "mCreateEntryGroupBox";
 			this.mCreateEntryGroupBox.Size = new System.Drawing.Size(228, 105);
 			this.mCreateEntryGroupBox.TabIndex = 3;
@@ -109,7 +110,7 @@
 			// 
 			this.m_btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.m_btnCancel.Location = new System.Drawing.Point(165, 146);
+			this.m_btnCancel.Location = new System.Drawing.Point(165, 173);
 			this.m_btnCancel.Name = "m_btnCancel";
 			this.m_btnCancel.Size = new System.Drawing.Size(75, 23);
 			this.m_btnCancel.TabIndex = 5;
@@ -120,12 +121,22 @@
 			// 
 			this.m_btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.m_btnOK.Location = new System.Drawing.Point(84, 146);
+			this.m_btnOK.Location = new System.Drawing.Point(84, 173);
 			this.m_btnOK.Name = "m_btnOK";
 			this.m_btnOK.Size = new System.Drawing.Size(75, 23);
 			this.m_btnOK.TabIndex = 4;
 			this.m_btnOK.Text = "&OK";
 			this.m_btnOK.UseVisualStyleBackColor = true;
+			// 
+			// mAutoSkipUsername
+			// 
+			this.mAutoSkipUsername.AutoSize = true;
+			this.mAutoSkipUsername.Location = new System.Drawing.Point(12, 35);
+			this.mAutoSkipUsername.Name = "mAutoSkipUsername";
+			this.mAutoSkipUsername.Size = new System.Drawing.Size(230, 17);
+			this.mAutoSkipUsername.TabIndex = 6;
+			this.mAutoSkipUsername.Text = "&Automatically skip user name for passwords";
+			this.mAutoSkipUsername.UseVisualStyleBackColor = true;
 			// 
 			// Options
 			// 
@@ -133,7 +144,8 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.m_btnCancel;
-			this.ClientSize = new System.Drawing.Size(252, 180);
+			this.ClientSize = new System.Drawing.Size(252, 207);
+			this.Controls.Add(this.mAutoSkipUsername);
 			this.Controls.Add(this.m_btnCancel);
 			this.Controls.Add(this.m_btnOK);
 			this.Controls.Add(this.mCreateEntryGroupBox);
@@ -162,5 +174,6 @@
 		private System.Windows.Forms.Button m_btnOK;
 		private System.Windows.Forms.GroupBox mCreateEntryGroupBox;
 		private System.Windows.Forms.Label mTargetGroupLabel;
+		private System.Windows.Forms.CheckBox mAutoSkipUsername;
 	}
 }

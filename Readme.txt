@@ -11,17 +11,21 @@ Features
  * Support for all major browsers: Firefox, Chrome, Internet Explorer, Opera
  * Create custom AutoType target URLs, or optionally use the standard URL field to match against
  * Create custom AutoType sequences for different URLs in the same entry
+ * Automatically skip User Name part of AutoType sequence when starting in a password box
  * Optionally define a shortcut key to create a new entry, pre-populated with information from
     the current browser page
+
 
 Installation
 ------------
 Place WebAutoType.plgx in your KeePass Plugins folder. A "WebAutoType Options" menu item will
 be added to the KeePass "Tools" menu.
 
+
 Uninstallation
 --------------
 Delete WebAutoType.plgx from your KeePass Plugins folder.
+
 
 Usage
 -----
@@ -40,6 +44,23 @@ are valid here).
 
 For multi-page logins, you can use these additional auto-type entries with the URLs of each page,
 and a custom keystroke sequence for each page.
+
+
+Automatically skipping User Name
+--------------------------------
+
+To have the AutoType sequence automatically skip the User Name part when starting from a password
+entry box, check the "Automatically skip user name for passwords" box in the "WebAutoType Options"
+window. When this option is enabled, if the cursor is in a Password edit box when the AutoType
+hot key is pressed, then if the entry's AutoType sequence starts with "{username}{tab}" then that
+part is ignored. Note that this won't be done for explicitly definied custom sequences for
+specific windows or URLs, just the sequence defined for the entry, or the one it inherits from
+its group. Currently, password edit box detection does not work in Chrome (as Chrome does not
+provide this information)
+
+
+Creating new Entries
+--------------------
 
 WebAutoType also offers the ability to set a shortcut for creating a new entry. To do this, click
 the "WebAutoType Options" entry in your "Tools" menu, and enter a keyboard shortcut in the Global
@@ -69,6 +90,10 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v3.1
+ Added support for automatically skipping the UserName part AutoType sequences when starting from
+  a password entry box.
+
 v3.0
  Added support for URL field matching
  Added Create Entry hot key
