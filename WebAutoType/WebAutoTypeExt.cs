@@ -186,6 +186,11 @@ namespace WebAutoType
 					m_host.MainWindow.EnsureVisibleForegroundWindow(false, false);
 					entryForm.StartPosition = FormStartPosition.CenterScreen;
 
+					if (m_host.MainWindow.IsTrayed())
+					{
+						entryForm.ShowInTaskbar = true;
+					}
+
 					if (entryForm.ShowDialog(m_host.MainWindow) == DialogResult.OK)
 					{
 						var group = database.RootGroup.FindGroup(CreateEntryTargetGroup, true) ?? database.RootGroup;
