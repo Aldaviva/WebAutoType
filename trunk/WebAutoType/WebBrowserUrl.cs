@@ -56,10 +56,25 @@ namespace WebAutoType
 				}
 				else if( el.Current.ClassName.StartsWith( "Chrome_WidgetWin_" ) )
 				{
-					el = el.FindFirst( TreeScope.Descendants, new PropertyCondition( AutomationElement.ClassNameProperty, "Chrome_OmniboxView" ) );
-					if( el != null )
+					// Chrome 29
+					el = TreeWalker.ControlViewWalker.GetParent(el);
+					if (el != null)
 					{
-						var valuePattern = el.GetCurrentPattern( ValuePattern.Pattern ) as ValuePattern;
+						el = el.FindFirst(TreeScope.Descendants, new AndCondition(new PropertyCondition(AutomationElement.NameProperty, "Address and search bar"),
+							new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)));
+
+						if (el != null)
+						{
+							var valuePattern = el.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
+							return valuePattern != null ? valuePattern.Current.Value : null;
+						}
+					}
+
+					// Chrome < 29
+					el = el.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.ClassNameProperty, "Chrome_OmniboxView"));
+					if (el != null)
+					{
+						var valuePattern = el.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
 						return valuePattern != null ? valuePattern.Current.Value : null;
 					}
 				}
@@ -102,29 +117,62 @@ namespace WebAutoType
 		/// </summary>
 		public static string GetFocussedBrowserUrl(IntPtr fallbackWindowHandle, out bool passwordFieldFocussed)
 		{
-			var focusedElement = AutomationElement.FocusedElement;
-			if (focusedElement == null)
+			try
 			{
+				var timeout = TimeSpan.FromSeconds(1);
+
+				AutomationElement focusedElement = null;
+
+				var stopWatch = System.Diagnostics.Stopwatch.StartNew();
+				do
+				{
+					focusedElement = AutomationElement.FocusedElement;
+					if (stopWatch.Elapsed > timeout)
+					{
+						// Could not get the focused element through UIA.
+						passwordFieldFocussed = false;
+						return GetBrowserUrl(fallbackWindowHandle);
+					}
+				} while (focusedElement == null || focusedElement == AutomationElement.RootElement);
+
+				// It's unlikely that we don't want an edit box of some sort, so give it an extra chance to get one
+				stopWatch.Reset();
+				stopWatch.Start();
+				while (stopWatch.Elapsed < timeout &&
+						focusedElement != null && focusedElement.Current.ControlType != ControlType.Edit &&
+												  !IsChromeWindowWithNoUIA(focusedElement))
+				{
+					focusedElement = AutomationElement.FocusedElement;
+				}
+
+				passwordFieldFocussed = focusedElement.Current.IsPassword;
+
+				var ffDocument = AncestorsOrSelf(focusedElement).FirstOrDefault(element => element.Current.ControlType == ControlType.Document);
+				if (ffDocument != null)
+				{
+					var url = GetValueOrDefault(ffDocument, null);
+					if (url != null)
+					{
+						return url;
+					}
+				}
+
+				// TODO: Other browsers
+
+				// Fall back on general case
+				return GetBrowserUrl((IntPtr)AncestorsOrSelf(focusedElement).Last().Current.NativeWindowHandle);
+			}
+			catch (Exception ex)
+			{
+				System.Diagnostics.Debug.WriteLine("UIA Failure: " + ex.Message);
 				passwordFieldFocussed = false;
 				return GetBrowserUrl(fallbackWindowHandle);
 			}
+		}
 
-			passwordFieldFocussed = focusedElement.Current.IsPassword;
-
-			var ffDocument = AncestorsOrSelf(focusedElement).FirstOrDefault(element => element.Current.ControlType == ControlType.Document);
-			if (ffDocument != null)
-			{
-				var url = GetValueOrDefault(ffDocument, null);
-				if (url != null)
-				{
-					return url;
-				}
-			}
-
-			// TODO: Other browsers
-
-			// Fall back on general case
-			return GetBrowserUrl((IntPtr)AncestorsOrSelf(focusedElement).Last().Current.NativeWindowHandle);
+		private static bool IsChromeWindowWithNoUIA(AutomationElement focusedElement)
+		{
+			return focusedElement.Current.ClassName == "Chrome_RenderWidgetHostHWND" && !(bool)focusedElement.GetCurrentPropertyValue(AutomationElement.IsValuePatternAvailableProperty);
 		}
 
 		public static bool GetFocussedBrowserInfo(out string selectedText, out string url, out string title)
