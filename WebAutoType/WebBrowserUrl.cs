@@ -57,17 +57,19 @@ namespace WebAutoType
 				else if( el.Current.ClassName.StartsWith( "Chrome_WidgetWin_" ) )
 				{
 					// Chrome 29
-					el = TreeWalker.ControlViewWalker.GetParent(el);
-					if (el != null)
-					{
-						el = el.FindFirst(TreeScope.Descendants, new AndCondition(new PropertyCondition(AutomationElement.NameProperty, "Address and search bar"),
-							new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit)));
+					var toolbar = el.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ToolBar));
 
-						if (el != null)
+					if (toolbar != null)
+					{
+						var editBox = toolbar.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit));
+
+						if (editBox != null)
 						{
-							var valuePattern = el.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
+							var valuePattern = editBox.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
 							return valuePattern != null ? valuePattern.Current.Value : null;
 						}
+
+						return null;
 					}
 
 					// Chrome < 29

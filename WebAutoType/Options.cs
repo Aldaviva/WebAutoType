@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using KeePass.UI;
 using KeePassLib.Native;
@@ -40,6 +37,12 @@ namespace WebAutoType
 
 			// Set initial UI state
 			mCreateEntryShortcutKey_TextChanged(null, EventArgs.Empty);
+		}
+
+		public bool ShowRepeatedSearch
+		{
+			get { return mShowRepeatedSearch.Checked; }
+			set { mShowRepeatedSearch.Checked = value; }
 		}
 
 		public bool MatchUrlField
@@ -173,9 +176,9 @@ namespace WebAutoType
 				var textArea = new Rectangle(e.Bounds.X + mTextPosition, e.Bounds.Y, 
 											 e.Bounds.Width - mTextPosition, e.Bounds.Height);
 
-				TextFormatFlags tff = (TextFormatFlags.PreserveGraphicsClipping |
-					TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix |
-					TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter);
+				const TextFormatFlags tff = (TextFormatFlags.PreserveGraphicsClipping |
+				                             TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix |
+				                             TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter);
 				
 				TextRenderer.DrawText(e.Graphics, mText, e.Font, textArea, e.ForeColor, e.BackColor, tff);
 
