@@ -14,6 +14,8 @@ Features
  * Automatically skip User Name part of AutoType sequence when starting in a password box
  * Optionally define a shortcut key to create a new entry, pre-populated with information from
     the current browser page
+ * Optionally show the search window on the second attempt to AutoType for a page with no
+    entry found.
 
 
 Installation
@@ -86,6 +88,21 @@ has been turned on - see the Chrome section for details) - other browsers will s
 the URL, but the other information is not accessible and will be left blank.
 
 
+Searching for Entries
+---------------------
+WebAutoType offers the ability to search for an entry. To enable this functionality, click the
+"WebAutoType Options" entry in your "Tools" menu, and check the "Show search for repeated autotype"
+box. Once enabled, if you trigger an AutoType for a web page, but no AutoType is performed (as
+no matching entry for the URL was found), then simply trigger the AutoType for the same page a
+second time (hit the same shortcut key again) and if it was still unable to find an AutoType match,
+the Search window will be shown.
+
+This is useful if you think that there should already be an entry for the page, but perhaps the URL
+didn't match exactly or the entry might have AutoType disabled, or be in a group with AutoType
+disabled.
+
+The search text is pre-populated with the detected URL for the page.
+
 Credits
 -------
 WebAutoType was initially developed by CEPOCTb. With his permission, version 3.0 has been released
@@ -100,6 +117,11 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v3.3
+ Added option for showing the Search window if AutoType is invoked twice for the same URL,
+  unsuccessfully.
+ Improved support for internationalised versions of Chrome
+
 v3.2
  Fixed support for Chrome v29
  Improved reliability of UIA field detection after focus shift (for example, after using the unlock

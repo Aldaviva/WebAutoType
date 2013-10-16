@@ -37,6 +37,7 @@
 			this.m_btnCancel = new System.Windows.Forms.Button();
 			this.m_btnOK = new System.Windows.Forms.Button();
 			this.mAutoSkipUsername = new System.Windows.Forms.CheckBox();
+			this.mShowRepeatedSearch = new System.Windows.Forms.CheckBox();
 			hotkeyLabel = new System.Windows.Forms.Label();
 			this.mCreateEntryGroupBox.SuspendLayout();
 			this.SuspendLayout();
@@ -58,7 +59,7 @@
 			this.mCreateEntryGroupBox.Controls.Add(this.mTargetGroupLabel);
 			this.mCreateEntryGroupBox.Controls.Add(hotkeyLabel);
 			this.mCreateEntryGroupBox.Controls.Add(this.mCreateEntryShortcutKeyTextBox);
-			this.mCreateEntryGroupBox.Location = new System.Drawing.Point(12, 58);
+			this.mCreateEntryGroupBox.Location = new System.Drawing.Point(12, 81);
 			this.mCreateEntryGroupBox.Name = "mCreateEntryGroupBox";
 			this.mCreateEntryGroupBox.Size = new System.Drawing.Size(228, 105);
 			this.mCreateEntryGroupBox.TabIndex = 3;
@@ -110,7 +111,7 @@
 			// 
 			this.m_btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this.m_btnCancel.Location = new System.Drawing.Point(165, 173);
+			this.m_btnCancel.Location = new System.Drawing.Point(165, 195);
 			this.m_btnCancel.Name = "m_btnCancel";
 			this.m_btnCancel.Size = new System.Drawing.Size(75, 23);
 			this.m_btnCancel.TabIndex = 5;
@@ -121,7 +122,7 @@
 			// 
 			this.m_btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
 			this.m_btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.m_btnOK.Location = new System.Drawing.Point(84, 173);
+			this.m_btnOK.Location = new System.Drawing.Point(84, 195);
 			this.m_btnOK.Name = "m_btnOK";
 			this.m_btnOK.Size = new System.Drawing.Size(75, 23);
 			this.m_btnOK.TabIndex = 4;
@@ -138,13 +139,24 @@
 			this.mAutoSkipUsername.Text = "&Automatically skip user name for passwords";
 			this.mAutoSkipUsername.UseVisualStyleBackColor = true;
 			// 
+			// mShowRepeatedSearch
+			// 
+			this.mShowRepeatedSearch.AutoSize = true;
+			this.mShowRepeatedSearch.Location = new System.Drawing.Point(12, 58);
+			this.mShowRepeatedSearch.Name = "mShowRepeatedSearch";
+			this.mShowRepeatedSearch.Size = new System.Drawing.Size(192, 17);
+			this.mShowRepeatedSearch.TabIndex = 7;
+			this.mShowRepeatedSearch.Text = "&Show search for repeated autotype";
+			this.mShowRepeatedSearch.UseVisualStyleBackColor = true;
+			// 
 			// Options
 			// 
 			this.AcceptButton = this.m_btnOK;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this.m_btnCancel;
-			this.ClientSize = new System.Drawing.Size(252, 207);
+			this.ClientSize = new System.Drawing.Size(252, 229);
+			this.Controls.Add(this.mShowRepeatedSearch);
 			this.Controls.Add(this.mAutoSkipUsername);
 			this.Controls.Add(this.m_btnCancel);
 			this.Controls.Add(this.m_btnOK);
@@ -175,5 +187,6 @@
 		private System.Windows.Forms.GroupBox mCreateEntryGroupBox;
 		private System.Windows.Forms.Label mTargetGroupLabel;
 		private System.Windows.Forms.CheckBox mAutoSkipUsername;
+		private System.Windows.Forms.CheckBox mShowRepeatedSearch;
 	}
 }
