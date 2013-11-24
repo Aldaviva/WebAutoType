@@ -29,16 +29,15 @@ Uninstallation
 Delete WebAutoType.plgx from your KeePass Plugins folder.
 
 
-Google Chrome
--------------
-The Chrome web browser, by default, does not expose details of the web page through accessibility.
-This means that while the URL will still be detected, none of the more advanced functionality of
-WebAutoType will be available.
+Opera 12 (Presto)
+------------------
+Opera does not, by default, have any accessibility exposed at all. In order to use WebAutoType
+with opera, you must first enable accessibility from Opera. To do this:
 
-To enable accessibility from Chrome, either:
-
-1. Start Chrome with this flag: --force-renderer-accessibility
-2. Or, visit this url to turn it on from within Chrome: chrome://accessibility
+1. Visit this url from within Opera: opera:config#UserPrefs|EnableAccessibilitySupport
+2. Check Enable Accessibility Support, which is disabled by default
+3. Scroll down and hit the Save button
+4. Restart Opera (the preference change only affects newly created tabs)
 
 
 Usage
@@ -103,6 +102,16 @@ disabled.
 
 The search text is pre-populated with the detected URL for the page.
 
+
+Security
+--------
+WebAutoType does not expose access to your KeePass database in any way. It only extracts additional
+data from the browser, using standard interfaces designed for screen readers and automation tools.
+
+Password data is still transferred by KeePass, using Autotype, and the mechanism for this transfer
+is not altered at all by WebAutoType.
+
+
 Credits
 -------
 WebAutoType was initially developed by CEPOCTb. With his permission, version 3.0 has been released
@@ -117,6 +126,11 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v3.4
+ Fixed crash if the options window was shown with no database loaded
+ Added support for Chrome accessibility probing, so chrome should now automatically expose
+  accessibility when KeePass with WebAutoType is running.
+
 v3.3
  Added option for showing the Search window if AutoType is invoked twice for the same URL,
   unsuccessfully.
