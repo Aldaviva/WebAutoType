@@ -33,7 +33,10 @@ namespace WebAutoType
 				mCreateEntryShortcutKey.RenderHotKey();
 			}
 
-			AddGroupToCombo(mHost.Database.RootGroup, 0);
+			if (mHost.Database.RootGroup != null)
+			{
+				AddGroupToCombo(mHost.Database.RootGroup, 0);				
+			}
 
 			// Set initial UI state
 			mCreateEntryShortcutKey_TextChanged(null, EventArgs.Empty);
@@ -89,7 +92,9 @@ namespace WebAutoType
 				}
 				else
 				{
+#pragma warning disable 612 // EqualsValue is deprecated, however in order to maintain compatibility with pre 2.24 versions of KeePass, we'll still use it
 					mTargetGroup.SelectedItem = mTargetGroup.Items.OfType<GroupComboItem>().FirstOrDefault(item => item.Uuid.EqualsValue(value));
+#pragma warning restore 612
 				}
 			}
 		}
@@ -114,14 +119,13 @@ namespace WebAutoType
 
 		private void mCreateEntryShortcutKey_TextChanged(object sender, EventArgs e)
 		{
-			if (mCreateEntryShortcutKey.HotKey != Keys.None)
+			if (mCreateEntryShortcutKey.HotKey != Keys.None && mHost.Database.RootGroup != null)
 			{
 				mTargetGroupLabel.Enabled = mTargetGroup.Enabled = true;
 				mTargetGroup.SelectedIndex = 0;
 			}
 			else
 			{
-
 				mTargetGroupLabel.Enabled = mTargetGroup.Enabled = false;
 				mTargetGroup.SelectedIndex = -1;
 			}

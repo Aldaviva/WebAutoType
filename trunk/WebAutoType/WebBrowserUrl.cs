@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Windows.Automation;
 using System.Collections.Generic;
 
@@ -11,6 +13,9 @@ namespace WebAutoType
 	/// </summary>
 	public static class WebBrowserUrl
 	{
+		// When Chrome enables accessibility, it takes a little while to enable. This value controls how often we poll to see if it's ready yet.
+		private static readonly TimeSpan ChromeRePollInterval = TimeSpan.FromMilliseconds(100);
+
 		/// <summary>
 		/// Currently using UIAutomation to get URL
 		/// </summary>
@@ -117,7 +122,7 @@ namespace WebAutoType
 		/// 
 		/// If the current focus is detected to be in a password field, passwordFieldFocussed is set true.
 		/// </summary>
-		public static string GetFocussedBrowserUrl(IntPtr fallbackWindowHandle, out bool passwordFieldFocussed)
+		internal static string GetFocussedBrowserUrl(ChromeAccessibilityWinEventHook chromeAccessibility, IntPtr fallbackWindowHandle, out bool passwordFieldFocussed)
 		{
 			try
 			{
@@ -125,17 +130,20 @@ namespace WebAutoType
 
 				AutomationElement focusedElement = null;
 
-				var stopWatch = System.Diagnostics.Stopwatch.StartNew();
+				var stopWatch = Stopwatch.StartNew();
+				var rootElement = AutomationElement.RootElement;
+
 				do
 				{
-					focusedElement = AutomationElement.FocusedElement;
 					if (stopWatch.Elapsed > timeout)
 					{
 						// Could not get the focused element through UIA.
 						passwordFieldFocussed = false;
 						return GetBrowserUrl(fallbackWindowHandle);
 					}
-				} while (focusedElement == null || focusedElement == AutomationElement.RootElement);
+
+					focusedElement = GetFocusedElement(chromeAccessibility);
+				} while (focusedElement == null || focusedElement == rootElement);
 
 				// It's unlikely that we don't want an edit box of some sort, so give it an extra chance to get one
 				stopWatch.Reset();
@@ -172,18 +180,39 @@ namespace WebAutoType
 			}
 		}
 
+		private static AutomationElement GetFocusedElement(ChromeAccessibilityWinEventHook chromeAccessibility)
+		{
+			chromeAccessibility.EventReceived = false;
+			var focusedElement = AutomationElement.FocusedElement;
+			// If Chrome accessibility received an event, then Chrome has just turned on accessibility, so re-query for the focused element now that Chrome will actually provide it.
+			if (chromeAccessibility.EventReceived)
+			{
+				var oldFocusedElement = focusedElement;
+				var stopWatch = Stopwatch.StartNew();
+				var timeout = TimeSpan.FromSeconds(1);
+				while (stopWatch.Elapsed < timeout &&
+				       focusedElement == oldFocusedElement)
+				{
+					// Wait a bit and re-query for the focused element. Now that accessibility is turned on, it shouldn't be the same.
+					Thread.Sleep(ChromeRePollInterval);
+					focusedElement = AutomationElement.FocusedElement;
+				}
+			}
+			return focusedElement;
+		}
+
 		private static bool IsChromeWindowWithNoUIA(AutomationElement focusedElement)
 		{
 			return focusedElement.Current.ClassName == "Chrome_RenderWidgetHostHWND" && !(bool)focusedElement.GetCurrentPropertyValue(AutomationElement.IsValuePatternAvailableProperty);
 		}
 
-		public static bool GetFocussedBrowserInfo(out string selectedText, out string url, out string title)
+		internal static bool GetFocussedBrowserInfo(ChromeAccessibilityWinEventHook chromeAccessibility, out string selectedText, out string url, out string title)
 		{
 			selectedText = null;
 			url = null;
 			title = null;
 
-			var focusedElement = AutomationElement.FocusedElement;
+			var focusedElement = GetFocusedElement(chromeAccessibility);
 			if( focusedElement == null )
 			{
 				return false;
@@ -217,7 +246,8 @@ namespace WebAutoType
 		{
 			TreeWalker walker = TreeWalker.ControlViewWalker;
 
-			while (element != AutomationElement.RootElement)
+			var rootElement = AutomationElement.RootElement;
+			while (element != rootElement)
 			{
 				yield return element;
 				element = walker.GetParent(element);

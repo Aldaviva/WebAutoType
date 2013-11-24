@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
@@ -42,6 +43,8 @@ namespace WebAutoType
 		private readonly HashSet<string> mUnfoundUrls = new HashSet<string>();
 		private FieldInfo mSearchTextBoxField;
 
+		private ChromeAccessibilityWinEventHook mChromeAccessibility;
+		
 		public override bool Initialize(IPluginHost host)
 		{
 			Debug.Assert( host != null );
@@ -71,6 +74,8 @@ namespace WebAutoType
 			}
 			
 			mSearchTextBoxField = typeof(SearchForm).GetField("m_tbSearch", BindingFlags.Instance | BindingFlags.NonPublic);
+
+			mChromeAccessibility = new ChromeAccessibilityWinEventHook();
 
 			return true; // Initialization successful
 		}
@@ -166,7 +171,7 @@ namespace WebAutoType
 				if (m_host.MainWindow.IsAtLeastOneFileOpen())
 				{
 					string selectedText, url, title;
-					WebBrowserUrl.GetFocussedBrowserInfo(out selectedText, out url, out title);
+					WebBrowserUrl.GetFocussedBrowserInfo(mChromeAccessibility, out selectedText, out url, out title);
 
 					if (!String.IsNullOrEmpty(url))
 					{
@@ -174,7 +179,7 @@ namespace WebAutoType
 						try
 						{
 							var uri = new Uri(url);
-							url = uri.GetLeftPart(UriPartial.Authority);
+							url = uri.GetLeftPart(UriPartial.Authority) + "/";
 						}
 						catch (UriFormatException)
 						{
@@ -201,7 +206,12 @@ namespace WebAutoType
 
 						if (ShowForegroundDialog(entryForm) == DialogResult.OK)
 						{
-							var group = database.RootGroup.FindGroup(CreateEntryTargetGroup, true) ?? database.RootGroup;
+							PwGroup group = database.RootGroup;
+							if (CreateEntryTargetGroup != null)
+							{
+								group = database.RootGroup.FindGroup(CreateEntryTargetGroup, true) ?? database.RootGroup;
+							}
+							
 							group.AddEntry(entry, true, true);
 							m_host.MainWindow.UpdateUI(false, null, database.UINeedsIconUpdate, null, true, null, true);
 						}
@@ -270,7 +280,7 @@ namespace WebAutoType
 		{
 			bool passwordFieldFocussed = false;
 
-			string sUrl = WebBrowserUrl.GetFocussedBrowserUrl(e.TargetWindowHandle, out passwordFieldFocussed);
+			string sUrl = WebBrowserUrl.GetFocussedBrowserUrl(mChromeAccessibility, e.TargetWindowHandle, out passwordFieldFocussed);
 
 			if ( !string.IsNullOrEmpty( sUrl ) )
 			{
@@ -668,8 +678,13 @@ namespace WebAutoType
 				Debug.Assert(result);
 				mCreateEntryHotkeyId = 0;
 			}
-		}
 
+			if (mChromeAccessibility != null)
+			{
+				mChromeAccessibility.Dispose();
+				mChromeAccessibility = null;
+			}
+		}
 	}
 
 		
