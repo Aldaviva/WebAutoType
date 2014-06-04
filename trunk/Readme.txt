@@ -23,6 +23,11 @@ Installation
 Place WebAutoType.plgx in your KeePass Plugins folder. A "WebAutoType Options" menu item will
 be added to the KeePass "Tools" menu.
 
+If KeePass shows a message box indicating that the plugin is not compatible, then please ensure
+that you have the .NET Framework 3.5 installed. (KeePass will work without that version installed
+but the compilation process to install this plugin doesn't work with certain 4.X versions of the
+framework)
+
 
 Uninstallation
 --------------
