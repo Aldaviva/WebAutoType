@@ -44,7 +44,12 @@ namespace WebAutoType
 		private FieldInfo mSearchTextBoxField;
 
 		private ChromeAccessibilityWinEventHook mChromeAccessibility;
-		
+
+		public override string UpdateUrl
+		{
+			get { return "sourceforge-version://WebAutoType/webautotype?-v(%5B%5Cd.%5D%2B)%5C.zip"; }
+		}
+
 		public override bool Initialize(IPluginHost host)
 		{
 			Debug.Assert( host != null );
@@ -171,7 +176,7 @@ namespace WebAutoType
 				if (m_host.MainWindow.IsAtLeastOneFileOpen())
 				{
 					string selectedText, url, title;
-					WebBrowserUrl.GetFocussedBrowserInfo(mChromeAccessibility, out selectedText, out url, out title);
+					WebBrowserUrl.GetFocusedBrowserInfo(mChromeAccessibility, out selectedText, out url, out title);
 
 					if (!String.IsNullOrEmpty(url))
 					{
@@ -280,7 +285,7 @@ namespace WebAutoType
 		{
 			bool passwordFieldFocussed = false;
 
-			string sUrl = WebBrowserUrl.GetFocussedBrowserUrl(mChromeAccessibility, e.TargetWindowHandle, out passwordFieldFocussed);
+			string sUrl = WebBrowserUrl.GetFocusedBrowserUrl(mChromeAccessibility, e.TargetWindowHandle, out passwordFieldFocussed);
 
 			if ( !string.IsNullOrEmpty( sUrl ) )
 			{

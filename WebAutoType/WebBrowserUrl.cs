@@ -61,6 +61,13 @@ namespace WebAutoType
 				}
 				else if( el.Current.ClassName.StartsWith( "Chrome_WidgetWin_" ) )
 				{
+					// Chrome > 29
+					var renderWidgetHost = el.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "Chrome_RenderWidgetHostHWND"));
+					if (renderWidgetHost != null)
+					{
+						return GetValueOrDefault(renderWidgetHost, null);
+					}
+
 					// Chrome 29
 					var toolbar = el.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ToolBar));
 
@@ -122,7 +129,7 @@ namespace WebAutoType
 		/// 
 		/// If the current focus is detected to be in a password field, passwordFieldFocussed is set true.
 		/// </summary>
-		internal static string GetFocussedBrowserUrl(ChromeAccessibilityWinEventHook chromeAccessibility, IntPtr fallbackWindowHandle, out bool passwordFieldFocussed)
+		internal static string GetFocusedBrowserUrl(ChromeAccessibilityWinEventHook chromeAccessibility, IntPtr fallbackWindowHandle, out bool passwordFieldFocussed)
 		{
 			try
 			{
@@ -148,13 +155,13 @@ namespace WebAutoType
 				// It's unlikely that we don't want an edit box of some sort, so give it an extra chance to get one
 				stopWatch.Reset();
 				stopWatch.Start();
-				while (stopWatch.Elapsed < timeout &&
-						focusedElement != null && focusedElement.Current.ControlType != ControlType.Edit &&
-												  !IsChromeWindowWithNoUIA(focusedElement))
+				while (stopWatch.Elapsed < timeout && 
+							focusedElement.Current.ControlType != ControlType.Edit &&
+							!IsChromeWindowWithNoUIA(focusedElement))
 				{
-					focusedElement = AutomationElement.FocusedElement;
+					focusedElement = GetFocusedElement(chromeAccessibility) ?? focusedElement;
 				}
-
+				
 				passwordFieldFocussed = focusedElement.Current.IsPassword;
 
 				var ffDocument = AncestorsOrSelf(focusedElement).FirstOrDefault(element => element.Current.ControlType == ControlType.Document);
@@ -184,6 +191,7 @@ namespace WebAutoType
 		{
 			chromeAccessibility.EventReceived = false;
 			var focusedElement = AutomationElement.FocusedElement;
+
 			// If Chrome accessibility received an event, then Chrome has just turned on accessibility, so re-query for the focused element now that Chrome will actually provide it.
 			if (chromeAccessibility.EventReceived)
 			{
@@ -198,6 +206,14 @@ namespace WebAutoType
 					focusedElement = AutomationElement.FocusedElement;
 				}
 			}
+
+			// Special check for Chrome (and others?) not returning actual focused element
+			if (focusedElement != null && !focusedElement.Current.HasKeyboardFocus)
+			{
+				// Find the actual focused element as a child of the one given
+				focusedElement = focusedElement.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.HasKeyboardFocusProperty, true)) ?? focusedElement;
+			}
+			
 			return focusedElement;
 		}
 
@@ -206,7 +222,7 @@ namespace WebAutoType
 			return focusedElement.Current.ClassName == "Chrome_RenderWidgetHostHWND" && !(bool)focusedElement.GetCurrentPropertyValue(AutomationElement.IsValuePatternAvailableProperty);
 		}
 
-		internal static bool GetFocussedBrowserInfo(ChromeAccessibilityWinEventHook chromeAccessibility, out string selectedText, out string url, out string title)
+		internal static bool GetFocusedBrowserInfo(ChromeAccessibilityWinEventHook chromeAccessibility, out string selectedText, out string url, out string title)
 		{
 			selectedText = null;
 			url = null;

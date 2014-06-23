@@ -34,8 +34,22 @@ Uninstallation
 Delete WebAutoType.plgx from your KeePass Plugins folder.
 
 
+Google Chrome
+-------------
+If accessibility is not enabled in Chrome, then WebAutoType can still detect the URL, but more
+advanced functionality such as automatically skipping User Name for password boxes can't be used.
+
+Chrome may not automatically enable accessibility, depending on the version. For several versions
+the automatic detection of applications requesting accessibility was broken (issue #342319). This
+has now been partially fixed, however it will now only check when Chrome is launched. If KeePass
+(with WebAutoType) is already running when Chrome is launched it will detect it and automatically
+enable accessibility. Otherwise, it will not be. To force accessiblity to be enabled even before
+KeePass is running, you can launch Chrome with the "--force-renderer-accessibility" flag on the
+command line.
+
+
 Opera 12 (Presto)
-------------------
+-----------------
 Opera does not, by default, have any accessibility exposed at all. In order to use WebAutoType
 with opera, you must first enable accessibility from Opera. To do this:
 
@@ -43,6 +57,14 @@ with opera, you must first enable accessibility from Opera. To do this:
 2. Check Enable Accessibility Support, which is disabled by default
 3. Scroll down and hit the Save button
 4. Restart Opera (the preference change only affects newly created tabs)
+
+
+Pale Moon
+---------
+Pale Moon (and similar FireFox variants) have Accessibility deliberately disabled in an attempt
+to improve performance. Therefore WebAutoType can not read the URL from them, and will not work
+at all. It is not possible for WebAutoType to support browsers which do not expose accessibility
+information.
 
 
 Usage
@@ -117,6 +139,13 @@ Password data is still transferred by KeePass, using Autotype, and the mechanism
 is not altered at all by WebAutoType.
 
 
+Checking for updates
+--------------------
+If you want to use the KeePass Check for Updates function to check for updates to this plugin
+then it requires the SourceForgeUpdateChecker plugin to be installed too:
+http://sourceforge.net/projects/kpsfupdatechecker
+
+
 Credits
 -------
 WebAutoType was initially developed by CEPOCTb. With his permission, version 3.0 has been released
@@ -131,6 +160,10 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v3.5
+ Re-enabled support for Chrome accessibility (see above section on Chrome for further details)
+ Added support for update checking, using SourceForgeUpdateChecker
+
 v3.4
  Fixed crash if the options window was shown with no database loaded
  Added support for Chrome accessibility probing, so chrome should now automatically expose
