@@ -61,14 +61,18 @@ namespace WebAutoType
 				}
 				else if( el.Current.ClassName.StartsWith( "Chrome_WidgetWin_" ) )
 				{
-					// Chrome > 29
+					// Chrome > 32
 					var renderWidgetHost = el.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "Chrome_RenderWidgetHostHWND"));
 					if (renderWidgetHost != null)
 					{
-						return GetValueOrDefault(renderWidgetHost, null);
+						var value = GetValueOrDefault(renderWidgetHost, null);
+						if (value != null)
+						{
+							return value;
+						}
 					}
 
-					// Chrome 29
+					// Chrome > 29
 					var toolbar = el.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ToolBar));
 
 					if (toolbar != null)
