@@ -16,53 +16,61 @@ namespace WebAutoType
 		// When Chrome enables accessibility, it takes a little while to enable. This value controls how often we poll to see if it's ready yet.
 		private static readonly TimeSpan ChromeRePollInterval = TimeSpan.FromMilliseconds(100);
 
-		/// <summary>
-		/// Currently using UIAutomation to get URL
-		/// </summary>
-		/// <param name="hWnd">Window handle</param>
-		/// <returns>URL if found, null otherwise</returns>
-		public static string GetBrowserUrl( IntPtr hWnd )
+		private static string[] SupportedTopLevelWindowClasses = new[] 
 		{
-			if( hWnd == IntPtr.Zero )
-			{
-				return null;
-			}
+			"MozillaUIWindowClass",
+			"MozillaWindowClass",
+			"IEFrame",
+			"OperaWindowClass",
+			// Chrome may append any number to this, but to search for a specific class name, which can't use wildcards, just use the first few.
+			"Chrome_WidgetWin_0",
+			"Chrome_WidgetWin_1",
+			"Chrome_WidgetWin_2",
+			"Chrome_WidgetWin_3",
+		};
 
-			AutomationElement el = AutomationElement.FromHandle( hWnd );
-			if( el != null )
+		public static IEnumerable<AutomationElement> GetTopLevelBrowserWindows()
+		{
+			return AutomationElement.RootElement.FindAll(TreeScope.Children, new OrCondition((from className in SupportedTopLevelWindowClasses
+																								select new PropertyCondition(AutomationElement.ClassNameProperty, className)).ToArray())).Cast<AutomationElement>();
+		}
+
+		public static string GetBrowserUrl(AutomationElement window)
+		{
+			if( window != null )
 			{
-				if ( el.Current.ClassName == "MozillaUIWindowClass" ) // FF 3.6
+				if ( window.Current.ClassName == "MozillaUIWindowClass" ) // FF 3.6
 				{
-					el = el.FindFirst( TreeScope.Descendants, new PropertyCondition( AutomationElement.ClassNameProperty, "MozillaContentWindowClass" ) );
-					if( el != null )
+					window = window.FindFirst( TreeScope.Descendants, new PropertyCondition( AutomationElement.ClassNameProperty, "MozillaContentWindowClass" ) );
+					if( window != null )
 					{
-						var valuePattern = el.GetCurrentPattern( ValuePattern.Pattern ) as ValuePattern;
+						var valuePattern = window.GetCurrentPattern( ValuePattern.Pattern ) as ValuePattern;
 						return valuePattern != null ? valuePattern.Current.Value  : null;
 					}
 				}
-				else if ( el.Current.ClassName == "MozillaWindowClass" ) // new FF, 8.0 etc
+				else if ( window.Current.ClassName == "MozillaWindowClass" ) // new FF, 8.0 etc
 				{
-					el = FindActiveFFDocument( el );
+					window = FindActiveFFDocument( window );
 
-					if ( el != null )
+					if ( window != null )
 					{
-						var valuePattern = el.GetCurrentPattern( ValuePattern.Pattern ) as ValuePattern;
+						var valuePattern = window.GetCurrentPattern( ValuePattern.Pattern ) as ValuePattern;
 						return valuePattern != null ? valuePattern.Current.Value : null;
 					}
 				}
-				else if( el.Current.ClassName == "IEFrame" )
+				else if( window.Current.ClassName == "IEFrame" )
 				{
-					el = el.FindFirst( TreeScope.Descendants, new PropertyCondition( AutomationElement.ClassNameProperty, "Internet Explorer_Server" ) );
-					if( el != null )
+					window = window.FindFirst( TreeScope.Descendants, new PropertyCondition( AutomationElement.ClassNameProperty, "Internet Explorer_Server" ) );
+					if( window != null )
 					{
-						var valuePattern = el.GetCurrentPattern( ValuePattern.Pattern ) as ValuePattern;
+						var valuePattern = window.GetCurrentPattern( ValuePattern.Pattern ) as ValuePattern;
 						return valuePattern != null ? valuePattern.Current.Value : null;
 					}
 				}
-				else if( el.Current.ClassName.StartsWith( "Chrome_WidgetWin_" ) )
+				else if( window.Current.ClassName.StartsWith( "Chrome_WidgetWin_" ) )
 				{
 					// Chrome > 32
-					var renderWidgetHost = el.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "Chrome_RenderWidgetHostHWND"));
+					var renderWidgetHost = window.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "Chrome_RenderWidgetHostHWND"));
 					if (renderWidgetHost != null)
 					{
 						var value = GetValueOrDefault(renderWidgetHost, null);
@@ -73,7 +81,7 @@ namespace WebAutoType
 					}
 
 					// Chrome > 29
-					var toolbar = el.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ToolBar));
+					var toolbar = window.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.ToolBar));
 
 					if (toolbar != null)
 					{
@@ -89,16 +97,16 @@ namespace WebAutoType
 					}
 
 					// Chrome < 29
-					el = el.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.ClassNameProperty, "Chrome_OmniboxView"));
-					if (el != null)
+					window = window.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.ClassNameProperty, "Chrome_OmniboxView"));
+					if (window != null)
 					{
-						var valuePattern = el.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
+						var valuePattern = window.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
 						return valuePattern != null ? valuePattern.Current.Value : null;
 					}
 				}
-				else if ( el.Current.ClassName == "OperaWindowClass" )
+				else if ( window.Current.ClassName == "OperaWindowClass" )
 				{
-					var arrToolbars = el.FindAll( TreeScope.Descendants, new PropertyCondition( AutomationElement.ControlTypeProperty, ControlType.ToolBar ) );
+					var arrToolbars = window.FindAll( TreeScope.Descendants, new PropertyCondition( AutomationElement.ControlTypeProperty, ControlType.ToolBar ) );
 					if ( arrToolbars.Count > 0 )
 					{
 						foreach ( AutomationElement toolbar in arrToolbars )
@@ -117,9 +125,7 @@ namespace WebAutoType
 										return valuePattern != null ? valuePattern.Current.Value : null;
 									}
 								}
-
 							}
-
 						}
 					}
 				}
@@ -150,7 +156,7 @@ namespace WebAutoType
 					{
 						// Could not get the focused element through UIA.
 						passwordFieldFocussed = false;
-						return GetBrowserUrl(fallbackWindowHandle);
+						return GetBrowserUrl(AutomationElement.FromHandle(fallbackWindowHandle));
 					}
 
 					focusedElement = GetFocusedElement(chromeAccessibility);
@@ -181,13 +187,13 @@ namespace WebAutoType
 				// TODO: Other browsers
 
 				// Fall back on general case
-				return GetBrowserUrl((IntPtr)AncestorsOrSelf(focusedElement).Last().Current.NativeWindowHandle);
+				return GetBrowserUrl(AutomationElement.FromHandle(fallbackWindowHandle));
 			}
 			catch (Exception ex)
 			{
 				System.Diagnostics.Debug.WriteLine("UIA Failure: " + ex.Message);
 				passwordFieldFocussed = false;
-				return GetBrowserUrl(fallbackWindowHandle);
+				return GetBrowserUrl(AutomationElement.FromHandle(fallbackWindowHandle));
 			}
 		}
 
@@ -256,7 +262,7 @@ namespace WebAutoType
 			if (url == null)
 			{
 				// Fall back on general case
-				url = GetBrowserUrl((IntPtr)AncestorsOrSelf(focusedElement).Last().Current.NativeWindowHandle);
+				url = GetBrowserUrl(AncestorsOrSelf(focusedElement).Last());
 			}
 
 			return true;

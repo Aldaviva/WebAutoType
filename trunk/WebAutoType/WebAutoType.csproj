@@ -82,6 +82,12 @@
     <Reference Include="UIAutomationTypes" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EditAutoTypeExtraControls.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="EditAutoTypeExtraControls.Designer.cs">
+      <DependentUpon>EditAutoTypeExtraControls.cs</DependentUpon>
+    </Compile>
     <Compile Include="HotKeyManager.cs" />
     <Compile Include="Options.cs">
       <SubType>Form</SubType>
@@ -117,6 +123,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="EditAutoTypeExtraControls.resx">
+      <DependentUpon>EditAutoTypeExtraControls.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Options.resx">
       <DependentUpon>Options.cs</DependentUpon>
     </EmbeddedResource>
