@@ -160,6 +160,9 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v3.7
+ Improved UI in the window for setting custom Auto-Type matches
+
 v3.6
  Fixed support for Chrome v32 with accessibility turned off
 

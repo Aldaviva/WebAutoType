@@ -28,14 +28,14 @@ namespace WebAutoType
 	public sealed class WebAutoTypeExt : Plugin
 	{
 		private IPluginHost m_host;
-		private const string c_sUrlPrefix = "??:URL:";
+		internal const string UrlAutoTypeWindowTitlePrefix = "??:URL:";
 		private const string OptionsConfigRoot = "WebAutoType.";
 		private const string UserNameAutoTypeSequenceStart = "{USERNAME}{TAB}";
+		private const string ExtraControlsName = "WebAutoTypeControls";
+		private const string ExistingControlsContainerName = "WebAutoTypeOriginalControls";
 
-		private Dictionary<int,List<string>> m_dicStrings = new Dictionary<int, List<string>>();
+		private Dictionary<int, List<string>> m_dicStrings = new Dictionary<int, List<string>>();
 		private Dictionary<int, bool> mSkipUserNameForSequence = new Dictionary<int, bool>();
-		private EditAutoTypeItemForm m_fEditForm;
-		private string m_sLblText = string.Empty;
 		private ToolStripMenuItem mOptionsMenu;
 		private int mCreateEntryHotkeyId;
 
@@ -52,10 +52,10 @@ namespace WebAutoType
 
 		public override bool Initialize(IPluginHost host)
 		{
-			Debug.Assert( host != null );
-			if( host == null )
+			Debug.Assert(host != null);
+			if (host == null)
 				return false;
-			
+
 			m_host = host;
 
 			GlobalWindowManager.WindowAdded += GlobalWindowManager_WindowAdded;
@@ -77,7 +77,7 @@ namespace WebAutoType
 			{
 				mCreateEntryHotkeyId = HotKeyManager.RegisterHotKey(CreateEntryHotKey);
 			}
-			
+
 			mSearchTextBoxField = typeof(SearchForm).GetField("m_tbSearch", BindingFlags.Instance | BindingFlags.NonPublic);
 
 			mChromeAccessibility = new ChromeAccessibilityWinEventHook();
@@ -132,8 +132,8 @@ namespace WebAutoType
 
 		private PwUuid CreateEntryTargetGroup
 		{
-			get 
-			{ 
+			get
+			{
 				var hexString = m_host.CustomConfig.GetString(OptionsConfigRoot + "CreateEntryTargetGroup", null);
 				if (String.IsNullOrEmpty(hexString))
 				{
@@ -141,9 +141,9 @@ namespace WebAutoType
 				}
 				return new PwUuid(MemUtil.HexStringToByteArray(hexString));
 			}
-			set 
+			set
 			{
-				m_host.CustomConfig.SetString(OptionsConfigRoot + "CreateEntryTargetGroup", value == null ? "" : value.ToHexString()); 
+				m_host.CustomConfig.SetString(OptionsConfigRoot + "CreateEntryTargetGroup", value == null ? "" : value.ToHexString());
 			}
 		}
 
@@ -162,7 +162,7 @@ namespace WebAutoType
 		#endregion
 
 		private bool mCreatingEntry = false;
-		
+
 		private void HotKeyManager_HotKeyPressed(object sender, HotKeyEventArgs e)
 		{
 			if (mCreatingEntry) return;
@@ -216,7 +216,7 @@ namespace WebAutoType
 							{
 								group = database.RootGroup.FindGroup(CreateEntryTargetGroup, true) ?? database.RootGroup;
 							}
-							
+
 							group.AddEntry(entry, true, true);
 							m_host.MainWindow.UpdateUI(false, null, database.UINeedsIconUpdate, null, true, null, true);
 						}
@@ -281,33 +281,33 @@ namespace WebAutoType
 			form.Activate();
 		}
 
-		private void AutoType_SequenceQueriesBegin( object sender, SequenceQueriesEventArgs e )
+		private void AutoType_SequenceQueriesBegin(object sender, SequenceQueriesEventArgs e)
 		{
 			bool passwordFieldFocussed = false;
 
 			string sUrl = WebBrowserUrl.GetFocusedBrowserUrl(mChromeAccessibility, e.TargetWindowHandle, out passwordFieldFocussed);
 
-			if ( !string.IsNullOrEmpty( sUrl ) )
+			if (!string.IsNullOrEmpty(sUrl))
 			{
 				List<string> lstStrings = new List<string>();
-				lstStrings.Add( sUrl );
+				lstStrings.Add(sUrl);
 
 				// store all possible variants
 				// for those browsers where there's no good way to get full URL found yet
-				if ( !sUrl.StartsWith( "http://" ) && !sUrl.StartsWith( "https://" ) )
+				if (!sUrl.StartsWith("http://") && !sUrl.StartsWith("https://"))
 				{
-					lstStrings.Add( "http://" + sUrl );
-					lstStrings.Add( "https://" + sUrl );
+					lstStrings.Add("http://" + sUrl);
+					lstStrings.Add("https://" + sUrl);
 				}
-				else if ( sUrl.StartsWith( "http://" ) )
+				else if (sUrl.StartsWith("http://"))
 				{
-					lstStrings.Add( sUrl.Substring( 7 ) );
+					lstStrings.Add(sUrl.Substring(7));
 				}
-				else if ( sUrl.StartsWith( "https://" ) )
+				else if (sUrl.StartsWith("https://"))
 				{
-					lstStrings.Add( sUrl.Substring( 8 ) );
+					lstStrings.Add(sUrl.Substring(8));
 				}
-				lock ( m_dicStrings )
+				lock (m_dicStrings)
 				{
 					m_dicStrings[e.EventID] = lstStrings;
 					mSkipUserNameForSequence[e.EventID] = passwordFieldFocussed && AutoSkipUserName;
@@ -318,9 +318,9 @@ namespace WebAutoType
 			}
 		}
 
-		private void AutoType_SequenceQueriesEnd( object sender, SequenceQueriesEventArgs e )
+		private void AutoType_SequenceQueriesEnd(object sender, SequenceQueriesEventArgs e)
 		{
-			lock ( m_dicStrings )
+			lock (m_dicStrings)
 			{
 				if (ShowRepeatedSearch)
 				{
@@ -359,14 +359,14 @@ namespace WebAutoType
 			}
 		}
 
-		private void AutoType_SequenceQuery( object sender, SequenceQueryEventArgs e )
+		private void AutoType_SequenceQuery(object sender, SequenceQueryEventArgs e)
 		{
 			string entryAutoTypeSequence = e.Entry.GetAutoTypeSequence();
 
 			List<string> lstStrings;
-			lock ( m_dicStrings )
+			lock (m_dicStrings)
 			{
-				if ( !m_dicStrings.TryGetValue( e.EventID, out lstStrings ) )
+				if (!m_dicStrings.TryGetValue(e.EventID, out lstStrings))
 				{
 					return;
 				}
@@ -381,55 +381,55 @@ namespace WebAutoType
 			}
 
 			var matchFound = false;
-			foreach ( AutoTypeAssociation association in e.Entry.AutoType.Associations )
+			foreach (AutoTypeAssociation association in e.Entry.AutoType.Associations)
 			{
 				string strUrlSpec = association.WindowName;
-				if ( strUrlSpec == null )
+				if (strUrlSpec == null)
 				{
 					continue;
 				}
 
 				strUrlSpec = strUrlSpec.Trim();
 
-				if ( !strUrlSpec.StartsWith( c_sUrlPrefix ) || strUrlSpec.Length <= c_sUrlPrefix.Length )
+				if (!strUrlSpec.StartsWith(UrlAutoTypeWindowTitlePrefix) || strUrlSpec.Length <= UrlAutoTypeWindowTitlePrefix.Length)
 				{
 					continue;
 				}
 
-				strUrlSpec = strUrlSpec.Substring( 7 );
+				strUrlSpec = strUrlSpec.Substring(7);
 
-				if ( strUrlSpec.Length > 0 )
+				if (strUrlSpec.Length > 0)
 				{
-					strUrlSpec = SprEngine.Compile( strUrlSpec, new SprContext( e.Entry, e.Database, SprCompileFlags.All ) );
+					strUrlSpec = SprEngine.Compile(strUrlSpec, new SprContext(e.Entry, e.Database, SprCompileFlags.All));
 				}
 
-				bool bRegex = strUrlSpec.StartsWith( @"//" ) && strUrlSpec.EndsWith( @"//" ) && ( strUrlSpec.Length > 4 );
+				bool bRegex = strUrlSpec.StartsWith(@"//") && strUrlSpec.EndsWith(@"//") && (strUrlSpec.Length > 4);
 				Regex objRegex = null;
 
-				if ( bRegex )
+				if (bRegex)
 				{
 					try
 					{
-						objRegex = new Regex( strUrlSpec.Substring( 2, strUrlSpec.Length - 4 ), RegexOptions.IgnoreCase );
+						objRegex = new Regex(strUrlSpec.Substring(2, strUrlSpec.Length - 4), RegexOptions.IgnoreCase);
 					}
-					catch ( Exception )
+					catch (Exception)
 					{
 						bRegex = false;
 					}
 				}
 
-				foreach ( string s in lstStrings )
+				foreach (string s in lstStrings)
 				{
-					if ( bRegex )
+					if (bRegex)
 					{
-						if ( objRegex.IsMatch( s ) )
+						if (objRegex.IsMatch(s))
 						{
-							e.AddSequence( string.IsNullOrEmpty( association.Sequence ) ? entryAutoTypeSequence : association.Sequence );
+							e.AddSequence(string.IsNullOrEmpty(association.Sequence) ? entryAutoTypeSequence : association.Sequence);
 							matchFound = true;
 							break;
 						}
 					}
-					else if ( StrUtil.SimplePatternMatch( strUrlSpec, s, StrUtil.CaseIgnoreCmp ) )
+					else if (StrUtil.SimplePatternMatch(strUrlSpec, s, StrUtil.CaseIgnoreCmp))
 					{
 						e.AddSequence(string.IsNullOrEmpty(association.Sequence) ? entryAutoTypeSequence : association.Sequence);
 						matchFound = true;
@@ -457,165 +457,216 @@ namespace WebAutoType
 			}
 		}
 
-		private void GlobalWindowManager_WindowAdded( object p_sender, GwmWindowEventArgs p_e )
+		#region Edit AutoType Window Customisation
+		private void GlobalWindowManager_WindowAdded(object p_sender, GwmWindowEventArgs p_e)
 		{
-			EditAutoTypeItemForm fEditForm = p_e.Form as EditAutoTypeItemForm;
-			if( fEditForm != null )
+			var editAutoTypeItemForm = p_e.Form as EditAutoTypeItemForm;
+			if (editAutoTypeItemForm != null)
 			{
-				m_fEditForm = fEditForm;
-
-				Label lblDescription = (Label) fEditForm.Controls.Find( "m_lblOpenHint", false ).First();
-				Label lblLeft = (Label) fEditForm.Controls.Find( "m_lblTargetWindow", false ).First();
-				ImageComboBoxEx cmb = (ImageComboBoxEx) fEditForm.Controls.Find( "m_cmbWindow", false ).First();
-
-				m_sLblText = lblLeft.Text;
-
-				// button to get current browser URL
-				Button button = new Button();
-				fEditForm.Controls.Add( button );
-				button.DialogResult = DialogResult.None;
-				button.Location = new Point( cmb.Location.X + cmb.Size.Width - button.Size.Width, lblDescription.Location.Y - 6 );
-				button.Name = "m_btnGetUrl";
-				button.Size = new Size( 75, 23 );
-				button.TabIndex = 80;
-				button.Text = "Get &Url";
-				button.Visible = false;
-				button.UseVisualStyleBackColor = true;
-				button.Click += button_Click;
-
-				// button to switch to URL mode
-				button = new Button();
-				fEditForm.Controls.Add( button );
-
-				button.DialogResult = DialogResult.None;
-				button.Location = new Point( lblLeft.Location.X, lblDescription.Location.Y );
-				button.Name = "m_btnSwitchType";
-				button.Size = new Size( 75, 23 );
-				button.TabIndex = 81;
-				button.Text = "Url";
-				button.UseVisualStyleBackColor = true;
-				button.Click += button_TypeClick;
-
-				TextBox textbox = new TextBox();
-				fEditForm.Controls.Add( textbox );
-				textbox.Visible = false;
-				textbox.Location = cmb.Location;
-				textbox.Name = "m_textboxCustomUrl";
-				textbox.Size = cmb.Size;
-				textbox.TabIndex = 0;
-				textbox.TextChanged += textbox_TextChanged;
-				textbox.Tag = cmb;
-
-				fEditForm.Shown += EditForm_Shown;
+				CustomiseEditFormUI(editAutoTypeItemForm);
 			}
 		}
 
-		private void textbox_TextChanged( object sender, EventArgs e )
+		private void CustomiseEditFormUI(EditAutoTypeItemForm editForm)
 		{
-			TextBox textbox = (TextBox) sender;
-			ImageComboBoxEx cmb = (ImageComboBoxEx) textbox.Tag;
-
-			cmb.Text = c_sUrlPrefix + textbox.Text;
-		}
-
-		private void EditForm_Shown( object sender, EventArgs e )
-		{
-			EditAutoTypeItemForm fEditForm = sender as EditAutoTypeItemForm;
-
-			if ( fEditForm != null )
+			if (editForm.Controls.Find(ExtraControlsName, false).Any())
 			{
-				fEditForm.SuspendLayout();
-				Button buttonType = (Button) fEditForm.Controls.Find( "m_btnSwitchType", false ).First();
-				Button buttonUrl = (Button) fEditForm.Controls.Find( "m_btnGetUrl", false ).First();
-				TextBox textbox = (TextBox) fEditForm.Controls.Find( "m_textboxCustomUrl", false ).First();
-				ImageComboBoxEx cmb = (ImageComboBoxEx) textbox.Tag;
-				Label lblLeft = (Label) fEditForm.Controls.Find( "m_lblTargetWindow", false ).First();
-				Label lblDescription = (Label) fEditForm.Controls.Find( "m_lblOpenHint", false ).First();
-				//LinkLabel lnkLabel = (LinkLabel) fEditForm.Controls.Find( "m_lnkWildcardRegexHint", false ).First();
+				Debug.Fail("Form already customised");
+				return;
+			}
 
+			var editSequenceOnlyField = typeof(EditAutoTypeItemForm).GetField("m_bEditSequenceOnly", BindingFlags.Instance | BindingFlags.NonPublic);
+			if (editSequenceOnlyField != null)
+			{
+				if (editSequenceOnlyField.GetValue(editForm) as bool? == true)
+				{
+					// This is a sequence-only edit window, so don't customise it.
+					return;
+				}
+			}
+
+			editForm.SuspendLayout();
+			try
+			{
+				var banner = editForm.Controls.Find("m_bannerImage", false).FirstOrDefault();
+				var placeholders = editForm.Controls.Find("m_rtbPlaceholders", false).FirstOrDefault();
+
+
+				// Add the new control, docked just below the banner
+				var extraControls = new EditAutoTypeExtraControls(editForm)
+				{
+					Name = ExtraControlsName,
+				};
+
+				editForm.Controls.Add(extraControls);
+				editForm.Controls.SetChildIndex(extraControls, 0);
+
+				if (banner != null)
+				{
+					extraControls.Top = banner.Bottom;
+					extraControls.MinimumSize = new Size(banner.Width, 0);
+				}
+
+				var shiftAmount = extraControls.Height;
+
+				// Move all existing controls, except for the banner and the extra controls, into a container
+				var container = new Panel
+				{
+					Name = ExistingControlsContainerName,
+					Size = editForm.ClientSize,
+					Location = Point.Empty,
+					Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom,
+				};
+
+				foreach (var control in editForm.Controls.Cast<Control>().ToArray())
+				{
+					if (control != banner &&
+						control != extraControls)
+					{
+						container.Controls.Add(control);
+					}
+				}
+
+				if (editForm.FormBorderStyle == FormBorderStyle.Sizable)
+				{
+					ApplyKeeResizeHack(editForm, shiftAmount);
+				}
+
+				// Resize the form
+				editForm.Height += shiftAmount;
+				if (editForm.MinimumSize.Height != 0)
+				{
+					editForm.MinimumSize = new Size(editForm.MinimumSize.Width, editForm.MinimumSize.Height + shiftAmount);
+				}
 				
 
-				if ( cmb.Text.StartsWith( c_sUrlPrefix ) )
-				{
-					textbox.Text = cmb.Text.Substring( c_sUrlPrefix.Length );
-					textbox.Visible = true;
-					cmb.Visible = false;
-					buttonUrl.Visible = true;
-					lblDescription.Visible = false;
-					//lnkLabel.Visible = false;
-					buttonType.Text = "Window";
-					lblLeft.Text = "URL:";
-				}
-				else
-				{
-					textbox.Visible = false;
-					cmb.Visible = true;
-					buttonUrl.Visible = false;
-					lblDescription.Visible = true;
-					//lnkLabel.Visible = true;
-					buttonType.Text = "URL";
-					lblLeft.Text = m_sLblText;
-				}
-				fEditForm.ResumeLayout();
+				// Then put the container panel back on the form, shifted downwards
+				container.Top = shiftAmount;
+				editForm.Controls.Add(container);
 			}
-		}
-
-
-		// get the topmost browser URL
-		void button_Click( object sender, EventArgs e )
-		{
-			IntPtr hWnd = NativeMethodsLocal.GetForegroundWindow();
-			string sUrl = null;
-			while( hWnd != IntPtr.Zero && string.IsNullOrEmpty( sUrl ) )
+			finally
 			{
-				hWnd = NativeMethodsLocal.GetWindow( hWnd, NativeMethodsLocal.GW_HWNDNEXT );
-				sUrl = WebBrowserUrl.GetBrowserUrl( hWnd );
+				editForm.ResumeLayout();
 			}
 
-			( sender as Button ).Parent.Controls["m_textboxCustomUrl"].Text = sUrl;
+			editForm.FormClosing += OnEditFormClosing;
 		}
 
-		void button_TypeClick( object sender, EventArgs e )
+		private static void ApplyKeeResizeHack(EditAutoTypeItemForm editForm, int shiftAmount)
 		{
-			Button buttonType = sender as Button;
-
-			if ( buttonType != null )
+			// KeeResize hack - KeeResize will automatically grow the items on the form when it resizes, which doesn't play nicely with having them moved from their original locations.
+			// To fix this, intercept the resize event for KeeResize and lie about the size of the form.
+			var eventsProperty = editForm.GetType().GetProperty("Events", BindingFlags.NonPublic | BindingFlags.Instance);
+			if (eventsProperty != null)
 			{
-				EditAutoTypeItemForm fEditForm = buttonType.Parent as EditAutoTypeItemForm;
-				fEditForm.SuspendLayout();
-				Button buttonUrl = (Button) fEditForm.Controls.Find( "m_btnGetUrl", false ).First();
-				TextBox textbox = (TextBox) fEditForm.Controls.Find( "m_textboxCustomUrl", false ).First();
-				ImageComboBoxEx cmb = (ImageComboBoxEx) textbox.Tag;
-				Label lblLeft = (Label) fEditForm.Controls.Find( "m_lblTargetWindow", false ).First();
-				Label lblDescription = (Label) fEditForm.Controls.Find( "m_lblOpenHint", false ).First();
-				//LinkLabel lnkLabel = (LinkLabel) fEditForm.Controls.Find( "m_lnkWildcardRegexHint", false ).First();
+				var events = eventsProperty.GetValue(editForm, null) as EventHandlerList;
 
-				if ( cmb.Visible )
+				var resizeEventKeyField = typeof(Control).GetField("EventResize", BindingFlags.NonPublic | BindingFlags.Static);
+				if (resizeEventKeyField != null)
 				{
-					textbox.Text = cmb.Text;
-					cmb.Text = c_sUrlPrefix + textbox.Text;
-					textbox.Visible = true;
-					cmb.Visible = false;
-					buttonUrl.Visible = true;
-					lblDescription.Visible = false;
-					//lnkLabel.Visible = false;
-					buttonType.Text = "Window";
-					lblLeft.Text = "URL:";
+					var resizeEventKey = resizeEventKeyField.GetValue(editForm);
+
+					var resizeEvent = events[resizeEventKey];
+
+					if (resizeEvent != null)
+					{
+						var keeResizeEventHandler = resizeEvent.GetInvocationList().FirstOrDefault(eventHandler => eventHandler.Method.DeclaringType.FullName == "KeeResizeLib.FormResizer");
+						if (keeResizeEventHandler != null)
+						{
+							events.RemoveHandler(resizeEventKey, keeResizeEventHandler);
+
+							var heightField = typeof(Control).GetField("height", BindingFlags.NonPublic | BindingFlags.Instance);
+
+							if (heightField != null)
+							{
+								// Discover minimum height
+								var controlInfoField = keeResizeEventHandler.Target.GetType().GetField("ControlInfo", BindingFlags.Public | BindingFlags.Instance);
+								if (controlInfoField != null)
+								{
+									var controlInfo = controlInfoField.GetValue(keeResizeEventHandler.Target);
+									if (controlInfo != null)
+									{
+										var orgHField = controlInfo.GetType().GetField("OrgH", BindingFlags.Public | BindingFlags.Instance);
+										if (orgHField != null)
+										{
+											var orgH = orgHField.GetValue(controlInfo) as int?;
+											if (orgH != null)
+											{
+												// Enforce this as a minimum size
+												editForm.MinimumSize = new Size(Math.Max(editForm.MinimumSize.Height, orgH.Value), editForm.MinimumSize.Width);
+											}
+										}
+									}
+								}
+
+								// Intercept all future resizes to lie about the height to KeeResize
+								editForm.Resize += (o, e) =>
+								{
+									var realHeight = (int)heightField.GetValue(editForm);
+									heightField.SetValue(editForm, realHeight - shiftAmount);
+
+									try
+									{
+										keeResizeEventHandler.DynamicInvoke(o, e);
+									}
+									finally
+									{
+										heightField.SetValue(editForm, realHeight);
+									}
+								};
+							}
+						}
+					}
 				}
-				else
-				{
-					cmb.Text = textbox.Text;
-					textbox.Visible = false;
-					cmb.Visible = true;
-					buttonUrl.Visible = false;
-					lblDescription.Visible = true;
-					//lnkLabel.Visible = true;
-					buttonType.Text = "URL";
-					lblLeft.Text = m_sLblText;
-				}
-				fEditForm.ResumeLayout();
 			}
 		}
+
+		private void OnEditFormClosing(object sender, FormClosingEventArgs e)
+		{
+			var editForm = sender as EditAutoTypeItemForm;
+
+			if (editForm != null)
+			{
+				RemoveEditFormUICustomisations(editForm);
+			}
+		}
+
+		private void RemoveEditFormUICustomisations(EditAutoTypeItemForm editForm)
+		{
+			var extraControls = editForm.Controls.Find(ExtraControlsName, false).FirstOrDefault();
+			var container = editForm.Controls.Find(ExistingControlsContainerName, false).FirstOrDefault();
+			if (extraControls == null || container == null)
+			{
+				Debug.Fail("Form not customised");
+				return;
+			}
+			editForm.SuspendLayout();
+			try
+			{
+				var shiftAmount = extraControls.Height;
+				editForm.Controls.Remove(container);
+				editForm.Controls.Remove(extraControls);
+
+				if (editForm.MinimumSize.Height != 0)
+				{
+					editForm.MinimumSize = new Size(editForm.MinimumSize.Width, editForm.MinimumSize.Height - shiftAmount);
+				}
+				editForm.Height -= shiftAmount;
+
+				foreach (var control in container.Controls.Cast<Control>().ToArray())
+				{
+					editForm.Controls.Add(control);
+				}
+				
+				container.Dispose();
+				extraControls.Dispose();
+			}
+			finally
+			{
+				editForm.ResumeLayout();
+			}
+		}
+		#endregion
 
 		/// <summary>
 		///
@@ -627,48 +678,7 @@ namespace WebAutoType
 			AutoType.SequenceQueriesBegin -= AutoType_SequenceQueriesBegin;
 			AutoType.SequenceQueriesEnd -= AutoType_SequenceQueriesEnd;
 
-			if ( m_fEditForm != null )
-			{
-				m_fEditForm.Shown -= EditForm_Shown;
-
-				if ( !m_fEditForm.IsDisposed )
-				{
-					// need locks here?
-
-					Button buttonType = (Button) m_fEditForm.Controls.Find( "m_btnSwitchType", false ).First();
-					Button buttonUrl = (Button) m_fEditForm.Controls.Find( "m_btnGetUrl", false ).First();
-					TextBox textbox = (TextBox) m_fEditForm.Controls.Find( "m_textboxCustomUrl", false ).First();
-					ImageComboBoxEx cmb = (ImageComboBoxEx) textbox.Tag;
-					Label lblLeft = (Label) m_fEditForm.Controls.Find( "m_lblTargetWindow", false ).First();
-					Label lblDescription = (Label) m_fEditForm.Controls.Find( "m_lblOpenHint", false ).First();
-
-					bool bVisible = m_fEditForm.Visible;
-
-					if ( bVisible )
-					{
-						m_fEditForm.SuspendLayout();
-						if ( !cmb.Visible )
-						{
-							cmb.Text = c_sUrlPrefix + textbox.Text;
-							lblLeft.Text = m_sLblText;
-						}
-					}
-
-					// remove all custom controls
-					m_fEditForm.Controls.Remove( buttonType );
-					m_fEditForm.Controls.Remove( buttonUrl );
-					m_fEditForm.Controls.Remove( textbox );
-					
-					// restore visible state of default controls
-					cmb.Visible = true;
-					lblDescription.Visible = true;
-
-					if ( bVisible )
-					{
-						m_fEditForm.ResumeLayout();
-					}
-				}
-			}
+			// Edit form customisations will be removed automatically when the form is closed.
 
 			if (mOptionsMenu != null)
 			{
@@ -690,19 +700,5 @@ namespace WebAutoType
 				mChromeAccessibility = null;
 			}
 		}
-	}
-
-		
-
-	// copy of some functions from KeePass private NativeMethods class
-	internal static class NativeMethodsLocal
-	{
-		[DllImport( "User32.dll" )]
-		internal static extern IntPtr GetForegroundWindow(); // Private, is wrapped
-
-		[DllImport( "user32.dll", SetLastError = true )]
-		internal static extern IntPtr GetWindow( IntPtr hWnd, uint uCmd );
-
-		internal const uint GW_HWNDNEXT = 2;
 	}
 }
