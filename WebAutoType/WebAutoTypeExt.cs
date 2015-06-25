@@ -178,25 +178,29 @@ namespace WebAutoType
 					string selectedText, url, title;
 					WebBrowserUrl.GetFocusedBrowserInfo(mChromeAccessibility, out selectedText, out url, out title);
 
+					var urlSuggestions = new List<String>();
 					if (!String.IsNullOrEmpty(url))
 					{
 						// Use only the root part of the URL
 						try
 						{
 							var uri = new Uri(url);
-							url = uri.GetLeftPart(UriPartial.Authority) + "/";
+							urlSuggestions.Add(uri.GetLeftPart(UriPartial.Authority) + "/");
+							urlSuggestions.Add(uri.GetLeftPart(UriPartial.Path));
+							urlSuggestions.Add(uri.GetLeftPart(UriPartial.Query));
 						}
 						catch (UriFormatException)
 						{
-							// Just use the url exactly as given
 						}
+						// Finally, the url exactly as given
+						urlSuggestions.Add(url);
 					}
 
 					// Logic adapted from EntryTemplates.CreateEntry
 					var database = m_host.Database;
 					var entry = new PwEntry(true, true);
 					if (!String.IsNullOrEmpty(title)) entry.Strings.Set(PwDefs.TitleField, new ProtectedString(database.MemoryProtection.ProtectTitle, title));
-					if (!String.IsNullOrEmpty(url)) entry.Strings.Set(PwDefs.UrlField, new ProtectedString(database.MemoryProtection.ProtectUrl, url));
+					if (urlSuggestions.Any()) entry.Strings.Set(PwDefs.UrlField, new ProtectedString(database.MemoryProtection.ProtectUrl, urlSuggestions[0]));
 					if (!String.IsNullOrEmpty(selectedText)) entry.Strings.Set(PwDefs.UserNameField, new ProtectedString(database.MemoryProtection.ProtectUserName, selectedText));
 
 					// Generate a default password, the same as in MainForm.OnEntryAdd
@@ -208,6 +212,31 @@ namespace WebAutoType
 					using (var entryForm = new PwEntryForm())
 					{
 						entryForm.InitEx(entry, PwEditMode.AddNewEntry, database, m_host.MainWindow.ClientIcons, false, true);
+
+						// Customise entry form to show drop-down for selecting URL
+						var urlBox = entryForm.Controls.Find("m_tbUrl", true).FirstOrDefault();
+						if (urlBox != null)
+						{
+							var urlCombo = new ComboBox
+							{
+								DropDownStyle = ComboBoxStyle.DropDown,
+								TabIndex = urlBox.TabIndex,
+								Text = urlBox.Text,
+							};
+							foreach (var urlSuggestion in urlSuggestions.Distinct())
+							{
+								urlCombo.Items.Add(urlSuggestion);
+							}
+							var syncPos = new EventHandler(delegate { urlCombo.SetBounds(urlBox.Left, urlBox.Top, urlBox.Width, urlBox.Height); });
+							urlBox.Resize += syncPos;
+							syncPos(null, EventArgs.Empty); // Initial sizing
+							urlBox.Parent.Controls.Add(urlCombo);
+							urlBox.Visible = false;
+
+							// Sync text
+							urlCombo.TextChanged += delegate { urlBox.Text = urlCombo.Text; };
+							urlBox.TextChanged += delegate { urlCombo.Text = urlBox.Text; };
+						}
 
 						if (ShowForegroundDialog(entryForm) == DialogResult.OK)
 						{
@@ -496,6 +525,8 @@ namespace WebAutoType
 				var extraControls = new EditAutoTypeExtraControls(editForm)
 				{
 					Name = ExtraControlsName,
+					Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right,
+					AutoSizeMode = AutoSizeMode.GrowOnly,
 				};
 
 				editForm.Controls.Add(extraControls);

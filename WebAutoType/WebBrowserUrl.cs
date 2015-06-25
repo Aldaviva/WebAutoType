@@ -156,7 +156,7 @@ namespace WebAutoType
 					{
 						// Could not get the focused element through UIA.
 						passwordFieldFocussed = false;
-						return GetBrowserUrl(AutomationElement.FromHandle(fallbackWindowHandle));
+						return fallbackWindowHandle == IntPtr.Zero ? null : GetBrowserUrl(AutomationElement.FromHandle(fallbackWindowHandle));
 					}
 
 					focusedElement = GetFocusedElement(chromeAccessibility);
@@ -170,6 +170,13 @@ namespace WebAutoType
 							!IsChromeWindowWithNoUIA(focusedElement))
 				{
 					focusedElement = GetFocusedElement(chromeAccessibility) ?? focusedElement;
+				}
+
+				// Special check for Chrome (and others?) not returning actual focused element
+				if (focusedElement.Current.ControlType != ControlType.Edit && !focusedElement.Current.HasKeyboardFocus)
+				{
+					// Find the actual focused element as a child of the one given. Slow.
+					focusedElement = focusedElement.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.HasKeyboardFocusProperty, true)) ?? focusedElement;
 				}
 				
 				passwordFieldFocussed = focusedElement.Current.IsPassword;
@@ -187,13 +194,13 @@ namespace WebAutoType
 				// TODO: Other browsers
 
 				// Fall back on general case
-				return GetBrowserUrl(AutomationElement.FromHandle(fallbackWindowHandle));
+				return fallbackWindowHandle == IntPtr.Zero ? null : GetBrowserUrl(AutomationElement.FromHandle(fallbackWindowHandle));
 			}
 			catch (Exception ex)
 			{
 				System.Diagnostics.Debug.WriteLine("UIA Failure: " + ex.Message);
 				passwordFieldFocussed = false;
-				return GetBrowserUrl(AutomationElement.FromHandle(fallbackWindowHandle));
+				return fallbackWindowHandle == IntPtr.Zero ? null : GetBrowserUrl(AutomationElement.FromHandle(fallbackWindowHandle));
 			}
 		}
 
@@ -215,13 +222,6 @@ namespace WebAutoType
 					Thread.Sleep(ChromeRePollInterval);
 					focusedElement = AutomationElement.FocusedElement;
 				}
-			}
-
-			// Special check for Chrome (and others?) not returning actual focused element
-			if (focusedElement != null && !focusedElement.Current.HasKeyboardFocus)
-			{
-				// Find the actual focused element as a child of the one given
-				focusedElement = focusedElement.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.HasKeyboardFocusProperty, true)) ?? focusedElement;
 			}
 			
 			return focusedElement;

@@ -24,9 +24,8 @@ Place WebAutoType.plgx in your KeePass Plugins folder. A "WebAutoType Options" m
 be added to the KeePass "Tools" menu.
 
 If KeePass shows a message box indicating that the plugin is not compatible, then please ensure
-that you have the .NET Framework 3.5 installed. (KeePass will work without that version installed
-but the compilation process to install this plugin doesn't work with certain 4.X versions of the
-framework)
+that you have the .NET Framework 4 or later installed. (KeePass will work with version 3.5, but
+this plugin may not. Use a 3.* version of this plugin for .NET Framework 3.5)
 
 
 Uninstallation
@@ -113,6 +112,9 @@ Currently, Title and User name are only supported on Firefox and Chrome (as long
 has been turned on - see the Chrome section for details) - other browsers will still populate
 the URL, but the other information is not accessible and will be left blank.
 
+The URL box in the Entry window will also show a drop-down button which allows you to choose a more
+specific URL to use, if using just the root part is not appropriate.
+
 
 Searching for Entries
 ---------------------
@@ -152,14 +154,23 @@ WebAutoType was initially developed by CEPOCTb. With his permission, version 3.0
 as a derived project by Alex Vallat.
 
 
-Bug Reporting, Questions, Comments, Feedback
---------------------------------------------
+Bug Reporting, Questions, Comments, Feedback, Donations
+-------------------------------------------------------
 Please use the SourceForge project page: <http://sourceforge.net/projects/webautotype>
 Bugs can be reported using the issue tracker, for anything else, a discussion forum is available.
 
 
 Changelog
 ---------
+v4.0
+ Default compatibility with CLR 4 (.NET Framework 4, 4.5, 4.6) 
+  instead of CLR 2 (.NET Framework 2, 3.5)
+ Added drop-down selection of URL part when creating a new entry using the New Entry hotkey.
+
+v3.8
+ Improved performance under certain UIA circumstances (usually first time usage under Firefox)
+ Fixed crash where focused window has no handle
+
 v3.7
  Improved UI in the window for setting custom Auto-Type matches
 
