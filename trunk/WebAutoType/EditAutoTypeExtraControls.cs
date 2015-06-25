@@ -16,9 +16,11 @@ namespace WebAutoType
 {
 	public partial class EditAutoTypeExtraControls : UserControl
 	{
+		private const int SeparatorIndent = 6;
 		private EditAutoTypeItemForm mParent;
 		private ImageComboBoxEx m_cmbWindow;
 		private ImageComboBoxEx mWindowTitleComboImposter;
+		private Label mSeparator;
 		private List<Control> mWindowTitleControls;
 
 		public EditAutoTypeExtraControls()
@@ -75,6 +77,19 @@ namespace WebAutoType
 			m_cmbWindow.Visible = false;
 			
 			mWindowTitleControls.Add(mWindowTitleComboImposter);
+
+			// Add a separator between the two groups of radio buttons
+			mSeparator = new Label
+			{
+				BorderStyle = BorderStyle.Fixed3D,
+				Location = new Point(SeparatorIndent, mWindowTitleControls.Max(c => c.Bottom) + 7),
+				Size = new Size(mParent.ClientSize.Width - SeparatorIndent * 2, 2),
+				Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right,
+				TabStop = false,
+			};
+
+			m_cmbWindow.Parent.Controls.Add(mSeparator);
+			
 		}
 
 		private Control FindControl(string name)
@@ -102,6 +117,11 @@ namespace WebAutoType
 				if (mWindowTitleComboImposter != null)
 				{
 					mWindowTitleComboImposter.Dispose();
+				}
+
+				if (mSeparator != null)
+				{
+					mSeparator.Dispose();
 				}
 			}
 			base.Dispose(disposing);
@@ -212,8 +232,17 @@ namespace WebAutoType
 		{
 			foreach (var browserWindow in WebBrowserUrl.GetTopLevelBrowserWindows())
 			{
-				var url = WebBrowserUrl.GetBrowserUrl(browserWindow);
-				mURL.BeginInvoke(new Action(() => mURL.Items.Add(url)));
+				try
+				{
+					var url = WebBrowserUrl.GetBrowserUrl(browserWindow);
+					if (url != null)
+					{
+						mURL.BeginInvoke(new Action(() => mURL.Items.Add(url)));
+					}
+				}
+				catch (Exception)
+				{
+				}
 			}
 		}
 

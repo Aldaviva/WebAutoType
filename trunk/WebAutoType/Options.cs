@@ -155,7 +155,7 @@ namespace WebAutoType
 			{
 				if (group.CustomIconUuid != PwUuid.Zero)
 				{
-					mImage = host.Database.GetCustomIcon(group.CustomIconUuid);
+					mImage = GetCustomIcon(host.Database, group.CustomIconUuid);
 				}
 				else
 				{
@@ -190,6 +190,28 @@ namespace WebAutoType
 					((e.State & DrawItemState.NoFocusRect) == DrawItemState.None))
 					e.DrawFocusRectangle();
 			}
+
+			#region IconHelper
+			private static Func<PwDatabase, PwUuid, Image> sGetCustomIconInternal;
+			private static Image GetCustomIcon(PwDatabase database, PwUuid customIconId)
+			{
+				if (sGetCustomIconInternal == null)
+				{
+					// Attempt to use the new (2.29 and above) methods to get a natively larger icon, rather than rescaling
+					var getCustomIconMethod = database.GetType().GetMethod("GetCustomIcon", new[] { typeof(PwUuid), typeof(int), typeof(int) });
+					if (getCustomIconMethod != null)
+					{
+						sGetCustomIconInternal = (db, id) => getCustomIconMethod.Invoke(db, new object[] { id, DpiUtil.ScaleIntX(16), DpiUtil.ScaleIntY(16) }) as Image;
+					}
+					else
+					{
+						// Pre- 2.29 method
+						sGetCustomIconInternal = (db, id) => DpiUtil.ScaleImage(db.GetCustomIcon(id), false);
+					}
+				}
+				return sGetCustomIconInternal(database, customIconId);
+			}
+			#endregion
 		}
 	}
 }
