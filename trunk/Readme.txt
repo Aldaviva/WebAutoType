@@ -163,6 +163,9 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 Changelog
 ---------
 v4.0
+ Added support for Microsoft Edge browser
+
+v4.0
  Default compatibility with CLR 4 (.NET Framework 4, 4.5, 4.6) 
   instead of CLR 2 (.NET Framework 2, 3.5)
  Added drop-down selection of URL part when creating a new entry using the New Entry hotkey.

@@ -22,6 +22,7 @@ namespace WebAutoType
 			"MozillaWindowClass",
 			"IEFrame",
 			"OperaWindowClass",
+			"ApplicationFrameWindow", // Edge, or, unfortunately, any Metro app
 			// Chrome may append any number to this, but to search for a specific class name, which can't use wildcards, just use the first few.
 			"Chrome_WidgetWin_0",
 			"Chrome_WidgetWin_1",
@@ -129,6 +130,18 @@ namespace WebAutoType
 						}
 					}
 				}
+				else if (window.Current.ClassName == "ApplicationFrameWindow") // Edge (or, unfortunately, any other Metro app))
+				{
+					window = window.FindFirst(TreeScope.Children, new AndCondition(new PropertyCondition(AutomationElement.ClassNameProperty, "Windows.UI.Core.CoreWindow"), new PropertyCondition(AutomationElement.NameProperty, "Microsoft Edge")));
+					if (window != null)
+					{
+						var urlBox = window.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.AutomationIdProperty, "addressEditBox"));
+						if (urlBox != null)
+						{
+							return urlBox.Current.Name;
+						}
+					}
+				}
 			}
 			return null;
 		}
@@ -178,20 +191,22 @@ namespace WebAutoType
 					// Find the actual focused element as a child of the one given. Slow.
 					focusedElement = focusedElement.FindFirst(TreeScope.Descendants, new PropertyCondition(AutomationElement.HasKeyboardFocusProperty, true)) ?? focusedElement;
 				}
-				
+
 				passwordFieldFocussed = focusedElement.Current.IsPassword;
 
-				var ffDocument = AncestorsOrSelf(focusedElement).FirstOrDefault(element => element.Current.ControlType == ControlType.Document);
-				if (ffDocument != null)
+				// Firefox
+				var parentDocument = AncestorsOrSelf(focusedElement).FirstOrDefault(element => element.Current.ControlType == ControlType.Document);
+				if (parentDocument != null)
 				{
-					var url = GetValueOrDefault(ffDocument, null);
+					var url = GetValueOrDefault(parentDocument, null);
+					
 					if (url != null)
 					{
 						return url;
 					}
 				}
 
-				// TODO: Other browsers
+				// TODO: Other browsers?
 
 				// Fall back on general case
 				return fallbackWindowHandle == IntPtr.Zero ? null : GetBrowserUrl(AutomationElement.FromHandle(fallbackWindowHandle));
