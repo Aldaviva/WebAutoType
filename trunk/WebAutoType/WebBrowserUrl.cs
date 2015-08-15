@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Automation;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 
 namespace WebAutoType
@@ -13,6 +14,9 @@ namespace WebAutoType
 	/// </summary>
 	public static class WebBrowserUrl
 	{
+		[DllImport("user32.dll", EntryPoint = "FindWindowEx", CharSet = CharSet.Auto)]
+		static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+		
 		// When Chrome enables accessibility, it takes a little while to enable. This value controls how often we poll to see if it's ready yet.
 		private static readonly TimeSpan ChromeRePollInterval = TimeSpan.FromMilliseconds(100);
 
@@ -135,15 +139,66 @@ namespace WebAutoType
 					window = window.FindFirst(TreeScope.Children, new AndCondition(new PropertyCondition(AutomationElement.ClassNameProperty, "Windows.UI.Core.CoreWindow"), new PropertyCondition(AutomationElement.NameProperty, "Microsoft Edge")));
 					if (window != null)
 					{
-						var urlBox = window.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.AutomationIdProperty, "addressEditBox"));
-						if (urlBox != null)
+						// Search for an "Internet Explorer_Server" window as a child of a "TabWindowClass" by hwnd descendants
+						foreach (var tabWindowHandle in FindDescendantWindows((IntPtr)window.Current.NativeWindowHandle, "TabWindowClass"))
 						{
-							return urlBox.Current.Name;
+							if (AutomationElement.FromHandle(tabWindowHandle).Current.IsEnabled)
+							{
+								var ieWindowHandle = FindWindowEx(tabWindowHandle, IntPtr.Zero, "Windows.UI.Core.CoreComponentInputSource", null);
+								if (ieWindowHandle != IntPtr.Zero)
+								{
+									var ieWindow = AutomationElement.FromHandle(ieWindowHandle);
+
+									if (ieWindow.Current.ClassName == "Internet Explorer_Server")
+									{
+										var url = ieWindow.Current.Name;
+										if (!String.IsNullOrEmpty(url))
+										{
+											return url;
+										}
+									}
+								}
+							}
 						}
 					}
 				}
 			}
 			return null;
+		}
+
+		internal static IEnumerable<IntPtr> FindDescendantWindows(IntPtr windowHandle, string className)
+		{
+			var results = new List<IntPtr>();
+
+			// Recurse into children
+			var anyChildren = false;
+			// First list any results
+			var childWindowHandle = IntPtr.Zero;
+			do
+			{
+				childWindowHandle = FindWindowEx(windowHandle, childWindowHandle, null, null);
+				if (childWindowHandle != IntPtr.Zero)
+				{
+					anyChildren = true;
+					results.AddRange(FindDescendantWindows(childWindowHandle, className));
+				}
+			} while (childWindowHandle != IntPtr.Zero);
+
+			if (anyChildren)
+			{
+				// Now add any results at this level
+				childWindowHandle = IntPtr.Zero;
+				do
+				{
+					childWindowHandle = FindWindowEx(windowHandle, childWindowHandle, className, null);
+					if (childWindowHandle != IntPtr.Zero)
+					{
+						results.Add(childWindowHandle);
+					}
+				} while (childWindowHandle != IntPtr.Zero);
+			}
+
+			return results;
 		}
 
 		/// <summary>
