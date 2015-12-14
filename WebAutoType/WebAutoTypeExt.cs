@@ -312,6 +312,11 @@ namespace WebAutoType
 
 		private void AutoType_SequenceQueriesBegin(object sender, SequenceQueriesEventArgs e)
 		{
+			if (!WebBrowserUrl.IsWindowHandleSupportedBrowser(e.TargetWindowHandle))
+			{
+				return;
+			}
+
 			bool passwordFieldFocussed = false;
 
 			string sUrl = WebBrowserUrl.GetFocusedBrowserUrl(mChromeAccessibility, e.TargetWindowHandle, out passwordFieldFocussed);
@@ -407,6 +412,12 @@ namespace WebAutoType
 				{
 					entryAutoTypeSequence = entryAutoTypeSequence.Substring(UserNameAutoTypeSequenceStart.Length);
 				}
+			}
+
+			if (lstStrings.Count == 0)
+			{
+				// No strings to check against, so don't even bother.
+				return;
 			}
 
 			var matchFound = false;
@@ -549,6 +560,9 @@ namespace WebAutoType
 					Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right | AnchorStyles.Bottom,
 				};
 
+				var acceptButton = editForm.AcceptButton;
+				var cancelButton = editForm.CancelButton;
+
 				foreach (var control in editForm.Controls.Cast<Control>().ToArray())
 				{
 					if (control != banner &&
@@ -557,6 +571,9 @@ namespace WebAutoType
 						container.Controls.Add(control);
 					}
 				}
+
+				editForm.AcceptButton = acceptButton;
+				editForm.CancelButton = cancelButton;
 
 				if (editForm.FormBorderStyle == FormBorderStyle.Sizable)
 				{
@@ -674,6 +691,9 @@ namespace WebAutoType
 			editForm.SuspendLayout();
 			try
 			{
+				var acceptButton = editForm.AcceptButton;
+				var cancelButton = editForm.CancelButton;
+
 				var shiftAmount = extraControls.Height;
 				editForm.Controls.Remove(container);
 				editForm.Controls.Remove(extraControls);
@@ -691,6 +711,9 @@ namespace WebAutoType
 				
 				container.Dispose();
 				extraControls.Dispose();
+
+				editForm.AcceptButton = acceptButton;
+				editForm.CancelButton = cancelButton;
 			}
 			finally
 			{
