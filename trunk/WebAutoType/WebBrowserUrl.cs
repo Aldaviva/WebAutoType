@@ -5,6 +5,7 @@ using System.Threading;
 using System.Windows.Automation;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 
 
 namespace WebAutoType
@@ -16,7 +17,10 @@ namespace WebAutoType
 	{
 		[DllImport("user32.dll", EntryPoint = "FindWindowEx", CharSet = CharSet.Auto)]
 		static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
-		
+
+		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+		static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
 		// When Chrome enables accessibility, it takes a little while to enable. This value controls how often we poll to see if it's ready yet.
 		private static readonly TimeSpan ChromeRePollInterval = TimeSpan.FromMilliseconds(100);
 
@@ -420,5 +424,21 @@ namespace WebAutoType
 		}
 
 
+		public static bool IsWindowHandleSupportedBrowser(IntPtr hWnd)
+		{
+			// Pre-allocate 256 characters, since this is the maximum class name length.
+			var classNameBuilder = new StringBuilder(256);
+			//Get the window class name
+			GetClassName(hWnd, classNameBuilder, classNameBuilder.Capacity);
+			var className = classNameBuilder.ToString();
+
+			if (SupportedTopLevelWindowClasses.Contains(className) ||
+				className.StartsWith("Chrome_WidgetWin_")) // Special case for Chrome which may append any number to the class name
+			{
+				return true;
+			}
+
+			return false;
+		}
 	}
 }
