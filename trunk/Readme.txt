@@ -162,6 +162,9 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v4.3
+ Added support for Yandex.Browser
+
 v4.2
  Fixed bug where Escape key no longer dismissed Edit Auto-Type Item window
  Removed delay when auto-typing into non-browser windows

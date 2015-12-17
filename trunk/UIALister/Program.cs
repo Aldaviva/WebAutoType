@@ -31,6 +31,11 @@ namespace UIALister
 			"Chrome_WidgetWin_1",
 			"Chrome_WidgetWin_2",
 			"Chrome_WidgetWin_3",
+			// Yandex browser is just Chrome, but renamed
+			"YandexBrowser_WidgetWin_0",
+			"YandexBrowser_WidgetWin_1",
+			"YandexBrowser_WidgetWin_2",
+			"YandexBrowser_WidgetWin_3",
 		};
 
 		private static HashSet<IntPtr> processedWindowHandles = new HashSet<IntPtr> { IntPtr.Zero };

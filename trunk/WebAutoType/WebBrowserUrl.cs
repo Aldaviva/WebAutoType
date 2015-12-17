@@ -36,6 +36,12 @@ namespace WebAutoType
 			"Chrome_WidgetWin_1",
 			"Chrome_WidgetWin_2",
 			"Chrome_WidgetWin_3",
+			// Yandex browser is just Chrome, but renamed
+			"YandexBrowser_WidgetWin_0",
+			"YandexBrowser_WidgetWin_1",
+			"YandexBrowser_WidgetWin_2",
+			"YandexBrowser_WidgetWin_3",
+
 		};
 
 		public static IEnumerable<AutomationElement> GetTopLevelBrowserWindows()
@@ -76,7 +82,8 @@ namespace WebAutoType
 						return valuePattern != null ? valuePattern.Current.Value : null;
 					}
 				}
-				else if( window.Current.ClassName.StartsWith( "Chrome_WidgetWin_" ) )
+				else if( window.Current.ClassName.StartsWith( "Chrome_WidgetWin_" ) ||
+					      window.Current.ClassName.StartsWith("YandexBrowser_WidgetWin_"))
 				{
 					// Chrome > 32
 					var renderWidgetHost = window.FindFirst(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "Chrome_RenderWidgetHostHWND"));
@@ -433,7 +440,8 @@ namespace WebAutoType
 			var className = classNameBuilder.ToString();
 
 			if (SupportedTopLevelWindowClasses.Contains(className) ||
-				className.StartsWith("Chrome_WidgetWin_")) // Special case for Chrome which may append any number to the class name
+				className.StartsWith("Chrome_WidgetWin_") || // Special case for Chrome which may append any number to the class name
+				className.StartsWith("YandexBrowser_WidgetWin_")) // Yandex is just a renamed Chrome
 			{
 				return true;
 			}
