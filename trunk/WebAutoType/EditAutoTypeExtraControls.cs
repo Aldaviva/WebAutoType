@@ -230,19 +230,9 @@ namespace WebAutoType
 
 		private void PopulateUrlDropDown(object state)
 		{
-			foreach (var browserWindow in WebBrowserUrl.GetTopLevelBrowserWindows())
+			foreach (var browserWindowUrl in WebBrowserUrl.GetTopLevelBrowserWindowUrls())
 			{
-				try
-				{
-					var url = WebBrowserUrl.GetBrowserUrl(browserWindow);
-					if (url != null)
-					{
-						mURL.BeginInvoke(new Action(() => mURL.Items.Add(url)));
-					}
-				}
-				catch (Exception)
-				{
-				}
+				mURL.BeginInvoke(new Action(() => mURL.Items.Add(browserWindowUrl)));
 			}
 		}
 
