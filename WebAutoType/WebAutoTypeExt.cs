@@ -312,7 +312,7 @@ namespace WebAutoType
 
 		private void AutoType_SequenceQueriesBegin(object sender, SequenceQueriesEventArgs e)
 		{
-			if (!WebBrowserUrl.IsWindowHandleSupportedBrowser(e.TargetWindowHandle))
+			if (!BrowserUrlReader.IsWindowHandleSupportedBrowser(e.TargetWindowHandle))
 			{
 				return;
 			}

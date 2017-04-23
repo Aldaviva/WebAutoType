@@ -4,11 +4,12 @@ http://sourceforge.net/projects/webautotype
 
 
 This is a plugin to KeePass <http://www.KeePass.info> to allow the AutoType functionality to
-work with browser URLs as well as window titles. It uses UIA accessibility technology to 'read'
-the browser window, and is therefore at this time only supported on Windows.
+work with browser URLs as well as window titles. It uses IAccessible screen assistive technology
+to 'read' the browser window, and is therefore at this time only supported on Windows.
 
 Features
- * Support for all major browsers: Firefox, Chrome, Internet Explorer, Opera
+ * Support for all major browsers: Firefox, Chrome (and chrome-based browsers like Opera),
+    Internet Explorer, and Edge
  * Create custom AutoType target URLs, or optionally use the standard URL field to match against
  * Create custom AutoType sequences for different URLs in the same entry
  * Automatically skip User Name part of AutoType sequence when starting in a password box
@@ -22,10 +23,6 @@ Installation
 ------------
 Place WebAutoType.plgx in your KeePass Plugins folder. A "WebAutoType Options" menu item will
 be added to the KeePass "Tools" menu.
-
-If KeePass shows a message box indicating that the plugin is not compatible, then please ensure
-that you have the .NET Framework 4 or later installed. (KeePass will work with version 3.5, but
-this plugin may not. Use a 3.* version of this plugin for .NET Framework 3.5)
 
 
 Uninstallation
@@ -47,23 +44,18 @@ KeePass is running, you can launch Chrome with the "--force-renderer-accessibili
 command line.
 
 
-Opera 12 (Presto)
------------------
-Opera does not, by default, have any accessibility exposed at all. In order to use WebAutoType
-with opera, you must first enable accessibility from Opera. To do this:
-
-1. Visit this url from within Opera: opera:config#UserPrefs|EnableAccessibilitySupport
-2. Check Enable Accessibility Support, which is disabled by default
-3. Scroll down and hit the Save button
-4. Restart Opera (the preference change only affects newly created tabs)
-
-
 Pale Moon
 ---------
 Pale Moon (and similar FireFox variants) have Accessibility deliberately disabled in an attempt
 to improve performance. Therefore WebAutoType can not read the URL from them, and will not work
 at all. It is not possible for WebAutoType to support browsers which do not expose accessibility
 information.
+
+
+Edge
+----
+Edge has limited support for IAccessible, therefore the URLs will be missing the http:// or
+https:// scheme prefix.
 
 
 Usage
@@ -93,7 +85,7 @@ window. When this option is enabled, if the cursor is in a Password edit box whe
 hot key is pressed, then if the entry's AutoType sequence starts with "{username}{tab}" then that
 part is ignored. Note that this won't be done for explicitly definied custom sequences for
 specific windows or URLs, just the sequence defined for the entry, or the one it inherits from
-its group.
+its group. This functionality is not available for Edge.
 
 
 Creating new Entries
@@ -108,9 +100,7 @@ Title: The title of the current web page.
 User name: The contents of the textbox with the focus, if any. (usefull if your username is already
            entered in the form)
            
-Currently, Title and User name are only supported on Firefox and Chrome (as long as accessibility
-has been turned on - see the Chrome section for details) - other browsers will still populate
-the URL, but the other information is not accessible and will be left blank.
+Title and User name are not supported for Edge.
 
 The URL box in the Entry window will also show a drop-down button which allows you to choose a more
 specific URL to use, if using just the root part is not appropriate.
@@ -148,6 +138,19 @@ then it requires the SourceForgeUpdateChecker plugin to be installed too:
 http://sourceforge.net/projects/kpsfupdatechecker
 
 
+A note on UIA and IAccessible
+-----------------------------
+WebAutoType was initially developed using the UIA interfaces for screen reading. This is a newer
+technology than MSAA (IAccessible). However, Firefox 52 and above only enable IAccessible2 if
+multiprocess is enabled, not UIA.
+
+IAccessible2 is not suitable for this plugin due to it's requirement for an installed system-level
+COM proxy dll, but it is based on the older IAccessible interfaces. This is sufficient for reading
+the URL in most browsers. The only exception is Microsoft Edge, does not have full support for
+IAccessible. With Edge, the URL can therefore only be obtained from the address bar, resulting in
+more limited functionality.
+
+
 Credits
 -------
 WebAutoType was initially developed by CEPOCTb. With his permission, version 3.0 has been released
@@ -162,6 +165,9 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v5.0
+ Switched to using IAccessible instead of UIA
+
 v4.3
  Added support for Yandex.Browser
 
