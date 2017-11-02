@@ -21,4 +21,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion( "2.1.9.*" )]
 
 // Starting at 3.*, as previous version of plugin erroneously marked itself with the KeePass version (2.1.9.0) instead of its own
-[assembly: AssemblyFileVersion( "5.0.2.0" )]
+[assembly: AssemblyFileVersion( "5.1.0.0" )]

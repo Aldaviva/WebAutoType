@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 using Accessibility;
 using WebAutoType;
 
@@ -68,9 +64,11 @@ namespace MSAALister
 		private static readonly HashSet<IntPtr> sProcessedWindowHandles = new HashSet<IntPtr> { IntPtr.Zero };
 		private static StreamWriter sFile;
 
+		[STAThread]
 		static void Main(string[] args)
 		{
 			Console.WriteLine("MSAA Lister");
+
 			string path = Path.Combine(Path.GetDirectoryName(typeof(Program).Assembly.Location), "MSAA.txt");
 			Console.WriteLine("Writing to: " + path);
 			using (sFile = File.CreateText(path))
@@ -110,6 +108,15 @@ namespace MSAALister
 				try
 				{
 					var accessibleObject = AccessibleObjectHelper.GetAccessibleObjectFromWindow(hWnd);
+
+					try
+					{
+						LogAccessibleObject(0, hWnd, accessibleObject);
+					}
+					catch (Exception ex)
+					{
+						sFile.WriteLine("Exception: " + ex.Message);
+					}
 
 					LogChildren(accessibleObject, 1);
 				}
@@ -238,11 +245,20 @@ namespace MSAALister
 				value = "";
 			}
 
-			var roleString = child.accRole[0] as string;
+			string roleString;
 
-			if (child.accRole[0] is int)
+			try
 			{
-				roleString = Enum.GetName(typeof(AccessibleRole), (int)child.accRole[0]);
+				roleString = child.accRole[0] as string;
+
+				if (child.accRole[0] is int)
+				{
+					roleString = Enum.GetName(typeof(AccessibleRole), (int)child.accRole[0]);
+				}
+			}
+			catch (NullReferenceException)
+			{
+				roleString = "<undefined role>";
 			}
 
 			int left, width, top, height;
@@ -250,11 +266,22 @@ namespace MSAALister
 			{
 				child.accLocation(out left, out top, out width, out height);
 			}
-			catch (ArgumentException)
+			catch (Exception)
 			{
 				left = width = top = height = -1;
 			}
-			sFile.WriteLine("{0}[{1}]:{2}={3}, Role:{4}, State:{5}, Pos:{6},{7}", hWnd.ToString("X"), GetClassName(hWnd), child.accName[0], value, roleString, child.accState[0], left, top);
+
+			string name;
+			try
+			{
+				name = child.accName[0];
+			}
+			catch (NullReferenceException)
+			{
+				name = "<no name>";
+			}
+			
+			sFile.WriteLine("{0}[{1}]:{2}={3}, Role:{4}, State:{5}, Pos:{6},{7}", hWnd.ToString("X"), GetClassName(hWnd), name, value, roleString, child.accState[0], left, top);
 		}
 
 
@@ -269,7 +296,8 @@ namespace MSAALister
 
 		private static string GetFirefoxUrl(IntPtr hwnd)
 		{
-			var doc = AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.GetAccessibleObjectFromWindow(hwnd, OBJID_CLIENT),
+			var doc = AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.GetAccessibleObjectFromWindow(hwnd),
+				role: AccessibleRole.Application),
 					role: AccessibleRole.Grouping,
 					hasNotState: AccessibleStates.Invisible),
 						role: AccessibleRole.PropertyPage,
@@ -282,12 +310,6 @@ namespace MSAALister
 				return null;
 			}
 
-			/*
-			var test = doc.accFocus as IAccessible;
-			LogAccessibleObject(0, hwnd, test);
-
-			doc = AccessibleObjectHelper.FindAncestor(test, AccessibleRole.Document);
-			*/
 			return doc.accValue[0];
 		}
 
