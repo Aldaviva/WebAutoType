@@ -58,6 +58,12 @@ Edge has limited support for IAccessible, therefore the URLs will be missing the
 https:// scheme prefix.
 
 
+Firefox
+-------
+The "Tile Tabs" addon modifies the layout and internal structure of Firefox pages in a way which is
+incompatible with WebAutoType 5.X. Users of this addon should stick with WebAutoType version 4.2.
+
+
 Usage
 -----
 To enable AutoType matching against the URL field in your entries, click the "WebAutoType Options"
@@ -165,10 +171,12 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v5.1
+ Fixed crash when showing the list of URLs drop-down with Firefox 57+
+ Improvements to compatibility with Firefox 58
+
 v5.0
  Switched to using IAccessible instead of UIA
-
-v4.3
  Added support for Yandex.Browser
 
 v4.2

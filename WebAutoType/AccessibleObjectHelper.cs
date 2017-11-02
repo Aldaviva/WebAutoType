@@ -23,13 +23,15 @@ namespace WebAutoType
 		[DllImport("oleacc.dll")]
 		private static extern uint AccessibleChildren(IAccessible paccContainer, int iChildStart, int cChildren, [Out] object[] rgvarChildren, out int pcObtained);
 
+		private static readonly Guid IID_IAccessible = new Guid("{618736E0-3C3D-11CF-810C-00AA00389B71}");
+
 		private const int NAVDIR_FIRSTCHILD = 7;
 		private const uint OBJID_CLIENT = 0xFFFFFFFC;
 		private const uint OBJID_CARET = 0xFFFFFFF8;
 
 		public static IAccessible GetAccessibleObjectFromWindow(IntPtr hwnd, uint objectID = 0)
 		{
-			return (IAccessible)AccessibleObjectFromWindow(hwnd, objectID, new Guid("{618736E0-3C3D-11CF-810C-00AA00389B71}"));
+			return (IAccessible)AccessibleObjectFromWindow(hwnd, objectID, IID_IAccessible);
 		}
 
 		public static IEnumerable<IAccessible> GetChildren(IAccessible parent)
@@ -95,10 +97,17 @@ namespace WebAutoType
 
 		private static bool AccessibleObjectMatchesConditions(IAccessible accessibleObject, AccessibleRole? role, string customRole, AccessibleStates? hasState = null, AccessibleStates? hasNotState = null)
 		{
-			return (role == null || accessibleObject.accRole[0].Equals((int)role)) &&
-				   (customRole == null || accessibleObject.accRole[0].Equals(customRole)) &&
-				   (hasState == null || HasState(accessibleObject, hasState.Value)) &&
-				   (hasNotState == null || !HasState(accessibleObject, hasNotState.Value));
+			try
+			{
+				return (role == null || accessibleObject.accRole[0].Equals((int)role)) &&
+						(customRole == null || accessibleObject.accRole[0].Equals(customRole)) &&
+						(hasState == null || HasState(accessibleObject, hasState.Value)) &&
+						(hasNotState == null || !HasState(accessibleObject, hasNotState.Value));
+			}
+			catch (NullReferenceException)
+			{
+				return false;
+			}
 		}
 
 		public static bool HasState(IAccessible accessibleObject, AccessibleStates state)
