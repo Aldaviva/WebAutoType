@@ -171,6 +171,9 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v5.2
+ Populate the entry title when creating a new entry without a focused edit box.
+
 v5.1
  Fixed crash when showing the list of URLs drop-down with Firefox 57+
  Improvements to compatibility with Firefox 58
