@@ -128,9 +128,9 @@ namespace WebAutoType
 			var focusedElement = windowDoc.accFocus as IAccessible;
 			if (focusedElement == null)
 			{
-				title = null;
 				selectedText = null;
 
+				title = GetDocumentTitle(windowDoc);
 				return GetDocumentUrl(windowDoc);
 			}
 			if ((int)focusedElement.accRole[0] == (int)AccessibleRole.Text)
