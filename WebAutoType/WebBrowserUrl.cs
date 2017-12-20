@@ -17,6 +17,10 @@ namespace WebAutoType
 		[DllImport("user32.dll")]
 		private static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
 
+		[DllImport("user32.dll")]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		private static extern bool IsWindowVisible(IntPtr hWnd);
+
 		private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
 		/// <summary>Temporary holder during enumeration</summary>
@@ -44,7 +48,7 @@ namespace WebAutoType
 
 		private static bool EnumWindows(IntPtr hWnd, IntPtr lParam)
 		{
-			if (BrowserUrlReader.IsWindowHandleSupportedBrowser(hWnd))
+			if (IsWindowVisible(hWnd) && BrowserUrlReader.IsWindowHandleSupportedBrowser(hWnd))
 			{
 				sTopLevelBrowserWindowHandles.Add(hWnd);
 			}
