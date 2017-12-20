@@ -13,7 +13,11 @@ namespace WebAutoType
 
 		protected override IAccessible GetDocument()
 		{
-			var ieServerHwnd = FindDescendantWindows(mHwnd, "Internet Explorer_Server").First();
+			var ieServerHwnd = FindDescendantWindows(mHwnd, "Internet Explorer_Server").FirstOrDefault();
+			if (ieServerHwnd == default(IntPtr))
+			{
+				return null;
+			}
 			var ieServer = AccessibleObjectHelper.GetAccessibleObjectFromWindow(ieServerHwnd);
 			return ieServer;
 		}
