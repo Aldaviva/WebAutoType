@@ -349,10 +349,10 @@ namespace MSAALister
 			if (test != null)
 			{
 				LogAccessibleObject(0, hwnd, test);
+				return doc.accValue[0];
 			}
-			doc = AccessibleObjectHelper.FindAncestor(test, AccessibleRole.Document);
-			
-			return doc.accValue[0];
+
+			return null;
 		}
 
 		private static string GetEdgeUrl(IntPtr hwnd)

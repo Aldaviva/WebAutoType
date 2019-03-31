@@ -63,6 +63,12 @@ Firefox
 The "Tile Tabs" addon modifies the layout and internal structure of Firefox pages in a way which is
 incompatible with WebAutoType 5.X. Users of this addon should stick with WebAutoType version 4.2.
 
+Very rarely, a site will include a custom "role" accessibility attribute on the body tag, which has
+the effect of preventing Firefox from exposing the URL through accessibility. If you there is a
+single site that doesn't work, where others do, then the solution may be to install the tiny addon:
+<https://addons.mozilla.org/en-GB/firefox/addon/prevent-custom-document-role/> which will remove
+the "role" attribute and make the site work normally.
+
 
 Usage
 -----
@@ -110,6 +116,9 @@ Title and User name are not supported for Edge.
 
 The URL box in the Entry window will also show a drop-down button which allows you to choose a more
 specific URL to use, if using just the root part is not appropriate.
+
+The Create Entry behavior may also be triggered from the command line, by passing the parameter:
+/e:WebAutoType.CreateEntry to KeePass.exe.
 
 
 Searching for Entries
@@ -171,6 +180,9 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v5.3
+ Added support for a "/e:WebAutoType.CreateEntry" KeePass parameter.
+
 v5.2
  Populate the entry title when creating a new entry without a focused edit box.
 

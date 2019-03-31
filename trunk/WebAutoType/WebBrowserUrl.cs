@@ -80,8 +80,16 @@ namespace WebAutoType
 				((ChromeBrowserUrlReader)browserUrlReader).ChromeAccessibilityWinEventHook = chromeAccessibility;
 			}
 
-			url = browserUrlReader.GetBrowserFocusUrlWithInfo(out title, out selectedText);
+			if (browserUrlReader == null)
+			{
+				selectedText = null;
+				url = null;
+				title = null;
+			}
+			else
+			{
+				url = browserUrlReader.GetBrowserFocusUrlWithInfo(out title, out selectedText);
+			}
 		}
-
 	}
 }
