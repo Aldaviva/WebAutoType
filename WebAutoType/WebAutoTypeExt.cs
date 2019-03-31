@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using KeePass;
 using KeePass.Plugins;
@@ -28,6 +29,9 @@ namespace WebAutoType
 	public sealed class WebAutoTypeExt : Plugin
 	{
 		private IPluginHost m_host;
+
+		private const string IpcCreateEntryEventName = "WebAutoType.CreateEntry";
+
 		internal const string UrlAutoTypeWindowTitlePrefix = "??:URL:";
 		private const string OptionsConfigRoot = "WebAutoType.";
 		private const string UserNameAutoTypeSequenceStart = "{USERNAME}{TAB}";
@@ -71,6 +75,7 @@ namespace WebAutoType
 
 			m_host.MainWindow.ToolsMenu.DropDownItems.Add(mOptionsMenu);
 
+			IpcUtilEx.IpcEvent += OnIpcEvent;
 			HotKeyManager.HotKeyPressed += HotKeyManager_HotKeyPressed;
 
 			if (CreateEntryHotKey != Keys.None)
@@ -161,9 +166,22 @@ namespace WebAutoType
 
 		#endregion
 
+		private void HotKeyManager_HotKeyPressed(object sender, HotKeyEventArgs e)
+		{
+			CreateEntry();
+		}
+
+		private void OnIpcEvent(object sender, IpcEventArgs ipcEventArgs)
+		{
+			if (ipcEventArgs.Name.Equals(IpcCreateEntryEventName, StringComparison.InvariantCultureIgnoreCase))
+			{
+				m_host.MainWindow.BeginInvoke(new Action(CreateEntry));
+			}
+		}
+
 		private bool mCreatingEntry = false;
 
-		private void HotKeyManager_HotKeyPressed(object sender, HotKeyEventArgs e)
+		private void CreateEntry()
 		{
 			if (mCreatingEntry) return;
 			mCreatingEntry = true;
