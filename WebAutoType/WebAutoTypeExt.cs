@@ -227,6 +227,18 @@ namespace WebAutoType
 					psAutoGen = psAutoGen.WithProtection(database.MemoryProtection.ProtectPassword);
 					entry.Strings.Set(PwDefs.PasswordField, psAutoGen);
 
+
+					PwGroup group = database.RootGroup;
+					if (CreateEntryTargetGroup != null)
+					{
+						group = database.RootGroup.FindGroup(CreateEntryTargetGroup, true) ?? database.RootGroup;
+					}
+
+					// Set parent group temporarily, so that the AutoType tab, and other plugins such as PEDCalc, can obtain it in the PwEntryForm.
+					//entry.ParentGroup = group;
+					var parentGroupProperty = typeof(PwEntry).GetProperty("ParentGroup", BindingFlags.Instance | BindingFlags.Public);
+					if (parentGroupProperty != null) parentGroupProperty.SetValue(entry, @group);
+
 					using (var entryForm = new PwEntryForm())
 					{
 						entryForm.InitEx(entry, PwEditMode.AddNewEntry, database, m_host.MainWindow.ClientIcons, false, true);
@@ -258,12 +270,6 @@ namespace WebAutoType
 
 						if (ShowForegroundDialog(entryForm) == DialogResult.OK)
 						{
-							PwGroup group = database.RootGroup;
-							if (CreateEntryTargetGroup != null)
-							{
-								group = database.RootGroup.FindGroup(CreateEntryTargetGroup, true) ?? database.RootGroup;
-							}
-
 							group.AddEntry(entry, true, true);
 							m_host.MainWindow.UpdateUI(false, null, database.UINeedsIconUpdate, null, true, null, true);
 						}
