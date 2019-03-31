@@ -180,6 +180,10 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v5.3.1
+ Compatibility with PEDCalc plugin - PwEntry ParentGroup now available for newly created entry in
+  PwEntryForm
+
 v5.3
  Added support for a "/e:WebAutoType.CreateEntry" KeePass parameter.
 
