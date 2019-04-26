@@ -99,8 +99,18 @@ namespace WebAutoType
 		{
 			try
 			{
-				return (role == null || accessibleObject.accRole[0].Equals((int)role)) &&
-						(customRole == null || accessibleObject.accRole[0].Equals(customRole)) &&
+				object actualRole;
+				try
+				{
+					actualRole = accessibleObject.accRole[0];
+				}
+				catch (COMException)
+				{
+					actualRole = "";
+				}
+
+				return (role == null || actualRole.Equals((int)role)) &&
+						(customRole == null || actualRole.Equals(customRole)) &&
 						(hasState == null || HasState(accessibleObject, hasState.Value)) &&
 						(hasNotState == null || !HasState(accessibleObject, hasNotState.Value));
 			}
