@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -12,7 +11,6 @@ namespace WebAutoType
 {
 	public partial class Options : Form
 	{
-		private readonly HotKeyControlEx mCreateEntryShortcutKey;
 		private readonly IPluginHost mHost;
 
 		public Options()
@@ -24,13 +22,11 @@ namespace WebAutoType
 		{
 			mHost = host;
 
-			mCreateEntryShortcutKey = HotKeyControlEx.ReplaceTextBox(mCreateEntryGroupBox, mCreateEntryShortcutKeyTextBox, false);
 			mCreateEntryShortcutKey.TextChanged += mCreateEntryShortcutKey_TextChanged;
 			if (NativeLib.IsUnix())
 			{
 				mCreateEntryShortcutKey.Enabled = false;
 				mCreateEntryShortcutKey.Clear();
-				mCreateEntryShortcutKey.RenderHotKey();
 			}
 
 			if (mHost.Database.RootGroup != null)
@@ -62,14 +58,8 @@ namespace WebAutoType
 
 		public Keys CreateEntryHotKey
 		{
-			get { return mCreateEntryShortcutKey.HotKey | mCreateEntryShortcutKey.HotKeyModifiers; }
-			set 
-			{
-				mCreateEntryShortcutKey.HotKey = value & Keys.KeyCode;
-				mCreateEntryShortcutKey.HotKeyModifiers = value & Keys.Modifiers;
-
-				mCreateEntryShortcutKey.RenderHotKey();
-			}
+			get { return mCreateEntryShortcutKey.HotKey; }
+			set { mCreateEntryShortcutKey.HotKey = value; }
 		}
 
 		public PwUuid CreateEntryTargetGroup
@@ -111,12 +101,6 @@ namespace WebAutoType
 			}
 		}
 		
-		protected override void OnValidating(CancelEventArgs e)
-		{
-			mCreateEntryShortcutKey.ResetIfModifierOnly();
-			base.OnValidating(e);
-		}
-
 		private void mCreateEntryShortcutKey_TextChanged(object sender, EventArgs e)
 		{
 			if (mCreateEntryShortcutKey.HotKey != Keys.None && mHost.Database.RootGroup != null)
@@ -153,13 +137,13 @@ namespace WebAutoType
 
 			public GroupComboItem(IPluginHost host, int indentLevel, PwGroup group)
 			{
-				if (group.CustomIconUuid != PwUuid.Zero)
+				if (group.CustomIconUuid.Equals(PwUuid.Zero))
 				{
-					mImage = GetCustomIcon(host.Database, group.CustomIconUuid);
+					mImage = host.MainWindow.ClientIcons.Images[(int)group.IconId];
 				}
 				else
 				{
-					mImage = host.MainWindow.ClientIcons.Images[(int)group.IconId];
+					mImage = GetCustomIcon(host.Database, group.CustomIconUuid);
 				}
 
 				mIndentPosition = indentLevel * mImage.Width;
@@ -192,24 +176,9 @@ namespace WebAutoType
 			}
 
 			#region IconHelper
-			private static Func<PwDatabase, PwUuid, Image> sGetCustomIconInternal;
 			private static Image GetCustomIcon(PwDatabase database, PwUuid customIconId)
 			{
-				if (sGetCustomIconInternal == null)
-				{
-					// Attempt to use the new (2.29 and above) methods to get a natively larger icon, rather than rescaling
-					var getCustomIconMethod = database.GetType().GetMethod("GetCustomIcon", new[] { typeof(PwUuid), typeof(int), typeof(int) });
-					if (getCustomIconMethod != null)
-					{
-						sGetCustomIconInternal = (db, id) => getCustomIconMethod.Invoke(db, new object[] { id, DpiUtil.ScaleIntX(16), DpiUtil.ScaleIntY(16) }) as Image;
-					}
-					else
-					{
-						// Pre- 2.29 method
-						sGetCustomIconInternal = (db, id) => DpiUtil.ScaleImage(db.GetCustomIcon(id), false);
-					}
-				}
-				return sGetCustomIconInternal(database, customIconId);
+				return database.GetCustomIcon(customIconId, DpiUtil.ScaleIntX(16), DpiUtil.ScaleIntY(16));
 			}
 			#endregion
 		}
