@@ -18,7 +18,6 @@ using System.Runtime.InteropServices;
 [assembly: Guid( "08633AB6-31A7-47CD-89CE-C669999D4988" )]
 
 // Assembly version information
-[assembly: AssemblyVersion( "2.1.9.*" )]
+[assembly: AssemblyVersion( "2.42.0.0" )]
 
-// Starting at 3.*, as previous version of plugin erroneously marked itself with the KeePass version (2.1.9.0) instead of its own
-[assembly: AssemblyFileVersion( "5.3.2.0" )]
+[assembly: AssemblyFileVersion( "6.0.0.0" )]

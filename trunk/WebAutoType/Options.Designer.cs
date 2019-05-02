@@ -1,4 +1,6 @@
-﻿namespace WebAutoType
+﻿using KeePass.UI;
+
+namespace WebAutoType
 {
 	partial class Options
 	{
@@ -32,7 +34,7 @@
 			this.mCreateEntryGroupBox = new System.Windows.Forms.GroupBox();
 			this.mTargetGroup = new System.Windows.Forms.ComboBox();
 			this.mTargetGroupLabel = new System.Windows.Forms.Label();
-			this.mCreateEntryShortcutKeyTextBox = new System.Windows.Forms.TextBox();
+			this.mCreateEntryShortcutKey = new KeePass.UI.HotKeyControlEx();
 			this.mMatchURLField = new System.Windows.Forms.CheckBox();
 			this.m_btnCancel = new System.Windows.Forms.Button();
 			this.m_btnOK = new System.Windows.Forms.Button();
@@ -58,7 +60,7 @@
 			this.mCreateEntryGroupBox.Controls.Add(this.mTargetGroup);
 			this.mCreateEntryGroupBox.Controls.Add(this.mTargetGroupLabel);
 			this.mCreateEntryGroupBox.Controls.Add(hotkeyLabel);
-			this.mCreateEntryGroupBox.Controls.Add(this.mCreateEntryShortcutKeyTextBox);
+			this.mCreateEntryGroupBox.Controls.Add(this.mCreateEntryShortcutKey);
 			this.mCreateEntryGroupBox.Location = new System.Drawing.Point(12, 81);
 			this.mCreateEntryGroupBox.Name = "mCreateEntryGroupBox";
 			this.mCreateEntryGroupBox.Size = new System.Drawing.Size(228, 105);
@@ -88,14 +90,14 @@
 			this.mTargetGroupLabel.TabIndex = 4;
 			this.mTargetGroupLabel.Text = "Create in group:";
 			// 
-			// mCreateEntryShortcutKeyTextBox
+			// mCreateEntryShortcutKey
 			// 
-			this.mCreateEntryShortcutKeyTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+			this.mCreateEntryShortcutKey.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.mCreateEntryShortcutKeyTextBox.Location = new System.Drawing.Point(91, 22);
-			this.mCreateEntryShortcutKeyTextBox.Name = "mCreateEntryShortcutKeyTextBox";
-			this.mCreateEntryShortcutKeyTextBox.Size = new System.Drawing.Size(126, 20);
-			this.mCreateEntryShortcutKeyTextBox.TabIndex = 2;
+			this.mCreateEntryShortcutKey.Location = new System.Drawing.Point(91, 22);
+			this.mCreateEntryShortcutKey.Name = "mCreateEntryShortcutKey";
+			this.mCreateEntryShortcutKey.Size = new System.Drawing.Size(126, 20);
+			this.mCreateEntryShortcutKey.TabIndex = 2;
 			// 
 			// mMatchURLField
 			// 
@@ -180,7 +182,7 @@
 		#endregion
 
 		private System.Windows.Forms.CheckBox mMatchURLField;
-		private System.Windows.Forms.TextBox mCreateEntryShortcutKeyTextBox;
+		private KeePass.UI.HotKeyControlEx mCreateEntryShortcutKey;
 		private System.Windows.Forms.ComboBox mTargetGroup;
 		private System.Windows.Forms.Button m_btnCancel;
 		private System.Windows.Forms.Button m_btnOK;

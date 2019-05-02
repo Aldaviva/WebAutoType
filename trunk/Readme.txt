@@ -180,6 +180,12 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v6.0.0
+ Compatibility with KeePass 2.42. For versions of KeePass prior to 2.42, use an 5.X version.
+
+v5.3.2
+ Provide extra error checking to protect against errors that are returned for custom web components Role property accessors.
+
 v5.3.1
  Compatibility with PEDCalc plugin - PwEntry ParentGroup now available for newly created entry in
   PwEntryForm
