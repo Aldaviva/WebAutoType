@@ -38,7 +38,7 @@ namespace WebAutoType
 		private const string ExtraControlsName = "WebAutoTypeControls";
 		private const string ExistingControlsContainerName = "WebAutoTypeOriginalControls";
 
-		private Dictionary<int, List<string>> m_dicStrings = new Dictionary<int, List<string>>();
+		private Dictionary<int, string> mUrlForAutoTypeEvent = new Dictionary<int, string>();
 		private Dictionary<int, bool> mSkipUserNameForSequence = new Dictionary<int, bool>();
 		private ToolStripMenuItem mOptionsMenu;
 		private int mCreateEntryHotkeyId;
@@ -347,27 +347,9 @@ namespace WebAutoType
 
 			if (!string.IsNullOrEmpty(sUrl))
 			{
-				List<string> lstStrings = new List<string>();
-				lstStrings.Add(sUrl);
-
-				// store all possible variants
-				// for those browsers where there's no good way to get full URL found yet
-				if (!sUrl.StartsWith("http://") && !sUrl.StartsWith("https://"))
+				lock (mUrlForAutoTypeEvent)
 				{
-					lstStrings.Add("http://" + sUrl);
-					lstStrings.Add("https://" + sUrl);
-				}
-				else if (sUrl.StartsWith("http://"))
-				{
-					lstStrings.Add(sUrl.Substring(7));
-				}
-				else if (sUrl.StartsWith("https://"))
-				{
-					lstStrings.Add(sUrl.Substring(8));
-				}
-				lock (m_dicStrings)
-				{
-					m_dicStrings[e.EventID] = lstStrings;
+					mUrlForAutoTypeEvent[e.EventID] = sUrl;
 					mSkipUserNameForSequence[e.EventID] = passwordFieldFocussed && AutoSkipUserName;
 				}
 
@@ -378,18 +360,12 @@ namespace WebAutoType
 
 		private void AutoType_SequenceQueriesEnd(object sender, SequenceQueriesEventArgs e)
 		{
-			lock (m_dicStrings)
+			lock (mUrlForAutoTypeEvent)
 			{
 				if (ShowRepeatedSearch)
 				{
-					string url = null;
-					List<string> lstStrings;
-					if (m_dicStrings.TryGetValue(e.EventID, out lstStrings))
-					{
-						url = lstStrings.First();
-					}
-
-					if (url != null)
+					string url;
+					if (mUrlForAutoTypeEvent.TryGetValue(e.EventID, out url))
 					{
 						if (!mFoundSequence.Remove(e.EventID))
 						{
@@ -413,7 +389,7 @@ namespace WebAutoType
 					}
 				}
 
-				m_dicStrings.Remove(e.EventID);
+				mUrlForAutoTypeEvent.Remove(e.EventID);
 			}
 		}
 
@@ -421,10 +397,10 @@ namespace WebAutoType
 		{
 			string entryAutoTypeSequence = e.Entry.GetAutoTypeSequence();
 
-			List<string> lstStrings;
-			lock (m_dicStrings)
+			string url;
+			lock (mUrlForAutoTypeEvent)
 			{
-				if (!m_dicStrings.TryGetValue(e.EventID, out lstStrings))
+				if (!mUrlForAutoTypeEvent.TryGetValue(e.EventID, out url))
 				{
 					return;
 				}
@@ -436,12 +412,6 @@ namespace WebAutoType
 				{
 					entryAutoTypeSequence = entryAutoTypeSequence.Substring(UserNameAutoTypeSequenceStart.Length);
 				}
-			}
-
-			if (lstStrings.Count == 0)
-			{
-				// No strings to check against, so don't even bother.
-				return;
 			}
 
 			var matchFound = false;
@@ -482,43 +452,72 @@ namespace WebAutoType
 					}
 				}
 
-				foreach (string s in lstStrings)
+				if (bRegex)
 				{
-					if (bRegex)
-					{
-						if (objRegex.IsMatch(s))
-						{
-							e.AddSequence(string.IsNullOrEmpty(association.Sequence) ? entryAutoTypeSequence : association.Sequence);
-							matchFound = true;
-							break;
-						}
-					}
-					else if (StrUtil.SimplePatternMatch(strUrlSpec, s, StrUtil.CaseIgnoreCmp))
+					if (objRegex.IsMatch(url))
 					{
 						e.AddSequence(string.IsNullOrEmpty(association.Sequence) ? entryAutoTypeSequence : association.Sequence);
 						matchFound = true;
 						break;
 					}
 				}
+				else if (StrUtil.SimplePatternMatch(strUrlSpec, url, StrUtil.CaseIgnoreCmp))
+				{
+					e.AddSequence(string.IsNullOrEmpty(association.Sequence) ? entryAutoTypeSequence : association.Sequence);
+					matchFound = true;
+					break;
+				}
 			}
 
 			if (MatchUrlField)
 			{
-				var url = e.Entry.Strings.GetSafe(KeePassLib.PwDefs.UrlField).ReadString();
-				if (!String.IsNullOrEmpty(url) && lstStrings.Any(s => s.StartsWith(url, StrUtil.CaseIgnoreCmp)))
+				var urlFieldValue = e.Entry.Strings.GetSafe(KeePassLib.PwDefs.UrlField).ReadString();
+
+				var match = Regex.Match(urlFieldValue, @"^(?<scheme>\w+://)?(?<credentials>[^@/]+@)?(?<host>[^/]+?)(?<port>:\d+)?(?<path>/.*)?$");
+				if (match.Success)
+				{
+					// Convert URL into regex to match subdomains and sub-paths
+					var urlRegex = "^" + // Must be start of string
+					               GetValueOrDefault(match, "scheme", "https?://") + // Scheme or assume http/s
+					               Regex.Escape(match.Groups["credentials"].Value) + // Credentials if present, otherwise assert none
+					               @"(\w+\.)*" + // Allow any number of subdomains
+					               Regex.Escape(match.Groups["host"].Value) + // Host part
+					               GetValueOrDefault(match, "port", @"(:\d+)?") + // Exact port if specified, otherwise any or no port.
+					               GetValueOrDefault(match, "path", "(?:/|$)") + // Path part as specified, or ensure host ends with / or end of url
+					               ".*$"; // Allow anything at the end of the url
+
+					matchFound = Regex.IsMatch(url, urlRegex);
+				}
+				else
+				{
+					// Can't parse URL field value as URL, so fall back on plain equals
+					matchFound = urlFieldValue.Equals(url, StrUtil.CaseIgnoreCmp);
+				}
+				
+				if (matchFound)
 				{
 					e.AddSequence(entryAutoTypeSequence);
-					matchFound = true;
 				}
 			}
 
 			if (matchFound && ShowRepeatedSearch)
 			{
-				lock (m_dicStrings)
+				lock (mUrlForAutoTypeEvent)
 				{
 					mFoundSequence.Add(e.EventID);
 				}
 			}
+		}
+		
+		private static string GetValueOrDefault(Match match, string groupName, string defaultRegex)
+		{
+			var matchGroup = match.Groups[groupName];
+			if (matchGroup.Success)
+			{
+				return Regex.Escape(matchGroup.Value);
+			}
+
+			return defaultRegex;
 		}
 
 		#region Edit AutoType Window Customisation

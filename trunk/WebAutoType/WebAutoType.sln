@@ -14,6 +14,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebAutoType", "WebAutoType.csproj", "{20B0DE53-703D-4520-87FF-C906DAC07933}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeePass", "..\..\KeePass-Source\KeePass\KeePass.csproj", "{10938016-DEE2-4A25-9A5A-8FD3444379CA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{20B0DE53-703D-4520-87FF-C906DAC07933} = {20B0DE53-703D-4520-87FF-C906DAC07933}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UIALister", "..\UIALister\UIALister.csproj", "{EE79CE8F-4DA9-475D-8027-2AFA99A70CF2}"
 EndProject
