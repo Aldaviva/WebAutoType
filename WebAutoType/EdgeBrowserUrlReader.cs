@@ -26,7 +26,13 @@ namespace WebAutoType
 			{
 				return null;
 			}
-			return addressBar.accValue[0];
+			var address = addressBar.accValue[0];
+			if (!address.Contains("://"))
+			{
+				address = "http://" + address; // If we can't tell if it is https or http, default to less secure assumption (insufficient justification to assume secure)
+			}
+
+			return address;
 		}
 
 		public override string GetBrowserFocusUrl(out bool passwordFieldFocussed)
