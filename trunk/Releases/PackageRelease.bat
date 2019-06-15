@@ -1,5 +1,5 @@
 @echo off
-set version=6.0.0
+set version=6.1.0
 set output=%~dp0v%version%\
 set zipfile="%output%WebAutoType-v%version%.zip"
 set buildoutputs="%~dp0Build Outputs"
