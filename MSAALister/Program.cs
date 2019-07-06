@@ -296,21 +296,19 @@ namespace MSAALister
 
 		private static string GetFirefoxUrl(IntPtr hwnd)
 		{
-			var doc = AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.GetAccessibleObjectFromWindow(hwnd),
+			var propertyPage = AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.GetAccessibleObjectFromWindow(hwnd),
 				role: AccessibleRole.Application),
 					role: AccessibleRole.Grouping,
 					hasNotState: AccessibleStates.Invisible),
 						role: AccessibleRole.PropertyPage,
-						hasNotState: AccessibleStates.Offscreen /*(inactive tab)*/),
-							customRole: "browser"),
-								role: AccessibleRole.Document);
+						hasNotState: AccessibleStates.Offscreen /*(inactive tab)*/);
 
-			if (doc == null)
-			{
-				return null;
-			}
+			var browser = AccessibleObjectHelper.FindChild(propertyPage, customRole: "browser, http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul") // Firefox 59+
+			           ?? AccessibleObjectHelper.FindChild(propertyPage, customRole: "browser"); // Firefox <59
 
-			return doc.accValue[0];
+			var doc = AccessibleObjectHelper.FindChild(browser, role: AccessibleRole.Document);
+
+			return doc?.accValue[0];
 		}
 
 		private static string GetInternetExplorerUrl(IntPtr hwnd)
