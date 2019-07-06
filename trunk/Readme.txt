@@ -180,6 +180,9 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 ---------
+v6.2
+ Compatibility with Firefox 59+
+
 v6.1
  Made URL field matching more intelligent. Rather than just starts-with, it will now try and match
   any URL that has the URL field value as a base, now including sub-domains.

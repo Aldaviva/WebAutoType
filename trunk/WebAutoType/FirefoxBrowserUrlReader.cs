@@ -68,14 +68,17 @@ namespace WebAutoType
 
 		protected override IAccessible GetDocument()
 		{
-			return AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.GetAccessibleObjectFromWindow(mHwnd),
+			var propertyPage = AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.FindChild(AccessibleObjectHelper.GetAccessibleObjectFromWindow(mHwnd),
 				role: AccessibleRole.Application),
 					role: AccessibleRole.Grouping,
 					hasNotState: AccessibleStates.Invisible),
 						role: AccessibleRole.PropertyPage,
-						hasNotState: AccessibleStates.Offscreen /*(inactive tab)*/),
-							customRole: "browser"),
-								role: AccessibleRole.Document);
+						hasNotState: AccessibleStates.Offscreen /*(inactive tab)*/);
+
+			var browser = AccessibleObjectHelper.FindChild(propertyPage, customRole: "browser, http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul") // Firefox 59+
+			           ?? AccessibleObjectHelper.FindChild(propertyPage, customRole: "browser"); // Firefox <59
+
+			return AccessibleObjectHelper.FindChild(browser, role: AccessibleRole.Document);
 		}
 	}
 }
