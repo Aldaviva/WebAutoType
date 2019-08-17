@@ -458,14 +458,12 @@ namespace WebAutoType
 					{
 						e.AddSequence(string.IsNullOrEmpty(association.Sequence) ? entryAutoTypeSequence : association.Sequence);
 						matchFound = true;
-						break;
 					}
 				}
 				else if (StrUtil.SimplePatternMatch(strUrlSpec, url, StrUtil.CaseIgnoreCmp))
 				{
 					e.AddSequence(string.IsNullOrEmpty(association.Sequence) ? entryAutoTypeSequence : association.Sequence);
 					matchFound = true;
-					break;
 				}
 			}
 
