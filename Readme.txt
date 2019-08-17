@@ -179,7 +179,10 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 
 Changelog
----------
+--------
+v6.2.1
+ Fix for displaying multiple matching auto-type sequences in a single entry
+
 v6.2
  Compatibility with Firefox 59+
 
