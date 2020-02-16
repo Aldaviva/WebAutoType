@@ -21,6 +21,10 @@ namespace WebAutoType
 			{
 				return null;
 			}
+
+			// Chrome only enables accessibility if it gets a top-level IAccessible request, so let's make one first
+			var _ = AccessibleObjectHelper.GetAccessibleObjectFromWindow(mHwnd).accName;
+
 			return AccessibleObjectHelper.FindChild(AccessibleObjectHelper.GetAccessibleObjectFromWindow(chromeRenderHwnd),
 				role: AccessibleRole.Document);
 		}

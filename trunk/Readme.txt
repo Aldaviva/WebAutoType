@@ -32,16 +32,11 @@ Delete WebAutoType.plgx from your KeePass Plugins folder.
 
 Google Chrome
 -------------
-If accessibility is not enabled in Chrome, then WebAutoType can still detect the URL, but more
-advanced functionality such as automatically skipping User Name for password boxes can't be used.
-
 Chrome may not automatically enable accessibility, depending on the version. For several versions
 the automatic detection of applications requesting accessibility was broken (issue #342319). This
-has now been partially fixed, however it will now only check when Chrome is launched. If KeePass
-(with WebAutoType) is already running when Chrome is launched it will detect it and automatically
-enable accessibility. Otherwise, it will not be. To force accessiblity to be enabled even before
-KeePass is running, you can launch Chrome with the "--force-renderer-accessibility" flag on the
-command line.
+has now been partially fixed, however if you are experiencing issues with Chrome then try forcing
+accessiblity to be enabled by launching Chrome with the "--force-renderer-accessibility" flag on
+the command line.
 
 
 Pale Moon
@@ -180,6 +175,10 @@ Bugs can be reported using the issue tracker, for anything else, a discussion fo
 
 Changelog
 --------
+v6.3
+ Improved Chrome and chromium-based browser support. In many cases the --force-renderer-accessibility
+  is no longer required.
+
 v6.2.1
  Fix for displaying multiple matching auto-type sequences in a single entry
 
