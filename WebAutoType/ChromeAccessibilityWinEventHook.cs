@@ -9,7 +9,7 @@ namespace WebAutoType
 	/// <summary>
 	/// Handles accessibility events as if a screen reader were running. Chrome detects this to automatically enable accessibility features.
 	/// </summary>
-	internal class ChromeAccessibilityWinEventHook : IDisposable
+	public class ChromeAccessibilityWinEventHook : IDisposable
 	{
 		private delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime);
 

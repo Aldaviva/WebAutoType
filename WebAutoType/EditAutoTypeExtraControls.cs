@@ -22,16 +22,18 @@ namespace WebAutoType
 		private ImageComboBoxEx mWindowTitleComboImposter;
 		private Label mSeparator;
 		private List<Control> mWindowTitleControls;
+		private readonly BrowserHelpers browserHelpers;
 
 		public EditAutoTypeExtraControls()
 		{
 			InitializeComponent();
 		}
 
-		public EditAutoTypeExtraControls(EditAutoTypeItemForm parent)
+		public EditAutoTypeExtraControls(EditAutoTypeItemForm parent, BrowserHelpers browserHelpers)
 			: this()
 		{
 			mParent = parent;
+			this.browserHelpers = browserHelpers;
 
 			mWindowTitleControls = (from controlName in new[] {	"m_lblOpenHint",
 																"m_lblOpenHint",
@@ -230,7 +232,7 @@ namespace WebAutoType
 
 		private void PopulateUrlDropDown(object state)
 		{
-			foreach (var browserWindowUrl in WebBrowserUrl.GetTopLevelBrowserWindowUrls())
+			foreach (var browserWindowUrl in WebBrowserUrl.GetTopLevelBrowserWindowUrls(browserHelpers))
 			{
 				mURL.BeginInvoke(new Action(() => mURL.Items.Add(browserWindowUrl)));
 			}

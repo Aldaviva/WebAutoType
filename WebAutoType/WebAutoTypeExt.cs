@@ -20,6 +20,7 @@ using KeePassLib.Utility;
 using KeePassLib;
 using KeePassLib.Security;
 using KeePassLib.Cryptography.PasswordGenerator;
+using WebAutoType.Vivaldi;
 
 namespace WebAutoType
 {
@@ -47,7 +48,7 @@ namespace WebAutoType
 		private readonly HashSet<string> mUnfoundUrls = new HashSet<string>();
 		private FieldInfo mSearchTextBoxField;
 
-		private ChromeAccessibilityWinEventHook mChromeAccessibility;
+		private BrowserHelpers browserHelpers;
 
 		public override string UpdateUrl
 		{
@@ -61,7 +62,7 @@ namespace WebAutoType
 				return false;
 
 			m_host = host;
-
+			
 			GlobalWindowManager.WindowAdded += GlobalWindowManager_WindowAdded;
 			AutoType.SequenceQuery += AutoType_SequenceQuery;
 			AutoType.SequenceQueriesBegin += AutoType_SequenceQueriesBegin;
@@ -85,7 +86,8 @@ namespace WebAutoType
 
 			mSearchTextBoxField = typeof(SearchForm).GetField("m_tbSearch", BindingFlags.Instance | BindingFlags.NonPublic);
 
-			mChromeAccessibility = new ChromeAccessibilityWinEventHook();
+			browserHelpers = new BrowserHelpers(new ChromeAccessibilityWinEventHook(), new VivaldiUrlReceiver());
+			browserHelpers.VivaldiUrlReceiver.Start();
 
 			return true; // Initialization successful
 		}
@@ -194,7 +196,7 @@ namespace WebAutoType
 				if (m_host.MainWindow.IsAtLeastOneFileOpen())
 				{
 					string selectedText, url, title;
-					WebBrowserUrl.GetFocusedBrowserInfo(mChromeAccessibility, out selectedText, out url, out title);
+					WebBrowserUrl.GetFocusedBrowserInfo(browserHelpers, out selectedText, out url, out title);
 
 					var urlSuggestions = new List<String>();
 					if (!String.IsNullOrEmpty(url))
@@ -343,7 +345,7 @@ namespace WebAutoType
 
 			bool passwordFieldFocussed = false;
 
-			string sUrl = WebBrowserUrl.GetFocusedBrowserUrl(mChromeAccessibility, e.TargetWindowHandle, out passwordFieldFocussed);
+			string sUrl = WebBrowserUrl.GetFocusedBrowserUrl(browserHelpers, e.TargetWindowHandle, out passwordFieldFocussed);
 
 			if (!string.IsNullOrEmpty(sUrl))
 			{
@@ -554,11 +556,11 @@ namespace WebAutoType
 
 
 				// Add the new control, docked just below the banner
-				var extraControls = new EditAutoTypeExtraControls(editForm)
+				var extraControls = new EditAutoTypeExtraControls(editForm, browserHelpers)
 				{
 					Name = ExtraControlsName,
 					Anchor = AnchorStyles.Left | AnchorStyles.Top | AnchorStyles.Right,
-					AutoSizeMode = AutoSizeMode.GrowOnly,
+					AutoSizeMode = AutoSizeMode.GrowOnly
 				};
 
 				editForm.Controls.Add(extraControls);
@@ -769,11 +771,9 @@ namespace WebAutoType
 				mCreateEntryHotkeyId = 0;
 			}
 
-			if (mChromeAccessibility != null)
-			{
-				mChromeAccessibility.Dispose();
-				mChromeAccessibility = null;
-			}
+			browserHelpers.ChromeAccessibilityWinEventHook.Dispose();
+			browserHelpers.VivaldiUrlReceiver.Stop();
+			browserHelpers.VivaldiUrlReceiver.Dispose();
 		}
 	}
 }

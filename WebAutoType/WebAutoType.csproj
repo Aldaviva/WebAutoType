@@ -46,6 +46,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -55,28 +56,22 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <Choose>
-    <When Condition="'$(Configuration)'=='Debug'">
-      <ItemGroup>
-        <ProjectReference Include="..\..\KeePass-Source\KeePass\KeePass.csproj">
-          <Project>{10938016-DEE2-4A25-9A5A-8FD3444379CA}</Project>
-          <Name>KeePass</Name>
-          <Private>False</Private>
-        </ProjectReference>
-      </ItemGroup>
-    </When>
-    <Otherwise>
-      <ItemGroup>
-        <Reference Include="KeePass">
-          <HintPath>..\..\KeePass\KeePass.exe</HintPath>
-          <Private>False</Private>
-        </Reference>
-      </ItemGroup>
-    </Otherwise>
+    <When Condition="'$(Configuration)'=='Debug'" />
+    <Otherwise />
   </Choose>
   <ItemGroup>
     <Reference Include="Accessibility" />
+    <Reference Include="KeePass, Version=2.44.0.591, Culture=neutral, PublicKeyToken=7952fc8ece49a093, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Programs\Security\KeePass\KeePass.exe</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <!--<Reference Include="KeePass">
+      <HintPath>..\..\KeePass-Source\Build\KeePass\Release\KeePass.exe</HintPath>
+    </Reference>-->
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
@@ -85,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessibleObjectHelper.cs" />
+    <Compile Include="BrowserHelpers.cs" />
     <Compile Include="BrowserUrlReader.cs" />
     <Compile Include="ChromeBrowserUrlReader.cs" />
     <Compile Include="EdgeBrowserUrlReader.cs" />
@@ -96,6 +92,7 @@
     </Compile>
     <Compile Include="FirefoxBrowserUrlReader.cs" />
     <Compile Include="HotKeyManager.cs" />
+    <Compile Include="IBrowserUrlReader.cs" />
     <Compile Include="InternetExplorerBrowserUrlReader.cs" />
     <Compile Include="Options.cs">
       <SubType>Form</SubType>
@@ -103,11 +100,14 @@
     <Compile Include="Options.Designer.cs">
       <DependentUpon>Options.cs</DependentUpon>
     </Compile>
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Vivaldi\VivaldiUrlReceiver.cs" />
+    <Compile Include="Vivaldi\VivaldiUrlReceiverBrowserUrlReader.cs" />
     <Compile Include="WebBrowserUrl.cs" />
     <Compile Include="WebAutoTypeExt.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -125,6 +125,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>IF $(ConfigurationName) == Release "$(ProjectDir)..\CreatePlgX.bat"</PostBuildEvent>

@@ -5,19 +5,22 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using Accessibility;
+using WebAutoType.Vivaldi;
 
 namespace WebAutoType
 {
-	internal abstract class BrowserUrlReader
-	{
+	internal abstract class BrowserUrlReader: IBrowserUrlReader {
 		[DllImport("user32.dll", EntryPoint = "FindWindowEx", CharSet = CharSet.Auto)]
 		static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
 
 		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
 		private static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
 		#region Factory
-		public static BrowserUrlReader Create(IntPtr hwnd)
+		public static IBrowserUrlReader Create(IntPtr hwnd)
 		{
 			if (hwnd != IntPtr.Zero)
 			{
@@ -34,8 +37,15 @@ namespace WebAutoType
 				else if (className.StartsWith("Chrome_WidgetWin_") ||
 						 className.StartsWith("YandexBrowser_WidgetWin_"))
 				{
-					return new ChromeBrowserUrlReader(hwnd);
-				}
+					if (GetWindowText(hwnd).EndsWith(" - Vivaldi"))
+					{
+						return new VivaldiUrlReceiverBrowserUrlReader();
+					}
+					else
+					{
+						return new ChromeBrowserUrlReader(hwnd);
+					}
+                }
 				else if (className == "ApplicationFrameWindow") // Edge (or, unfortunately, any other Metro app))
 				{
 					return new EdgeBrowserUrlReader(hwnd);
@@ -69,6 +79,12 @@ namespace WebAutoType
 			var className = classNameBuilder.ToString();
 			return className;
 		}
+
+        private static string GetWindowText(IntPtr hWnd) {
+            var stringBuilder = new StringBuilder(1024);
+            GetWindowText(hWnd, stringBuilder, stringBuilder.Capacity);
+            return stringBuilder.ToString();
+        }
 		#endregion
 
 		protected readonly IntPtr mHwnd;
