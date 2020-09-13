@@ -8,8 +8,10 @@ using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using KeePass;
+using KeePass.App;
 using KeePass.Plugins;
 using KeePass.Forms;
 using KeePass.UI;
@@ -87,7 +89,7 @@ namespace WebAutoType
 			mSearchTextBoxField = typeof(SearchForm).GetField("m_tbSearch", BindingFlags.Instance | BindingFlags.NonPublic);
 
 			browserHelpers = new BrowserHelpers(new ChromeAccessibilityWinEventHook(), new VivaldiUrlReceiver());
-			browserHelpers.VivaldiUrlReceiver.Start();
+			browserHelpers.VivaldiUrlReceiver.Start(host);
 
 			return true; // Initialization successful
 		}

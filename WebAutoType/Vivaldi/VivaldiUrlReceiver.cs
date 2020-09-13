@@ -7,23 +7,32 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Security;
 using System.Security.Authentication;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using KeePass.Plugins;
+using KeePassLib.Utility;
+using Sodium;
 using WebAutoType.Annotations;
 
 namespace WebAutoType.Vivaldi
 {
 	public class VivaldiUrlReceiver : IDisposable, INotifyPropertyChanged
 	{
-		private const int WorkerCount = 4;
-		private const ushort ListeningPort = 53372;
+		private const int                     WorkerCount          = 4;
+		private const ushort                  ListeningPort        = 53372;
+		private const string                  PrivateKeyConfigName = "WebAutoType.VivaldiUrlReceiver.PrivateKey";
+		private const string                  MethodPath           = "/webautotype/activeurl/";
+		private const Utilities.Base64Variant Base64Variant        = Utilities.Base64Variant.UrlSafeNoPadding;
 
 		private readonly HttpListener httpServer = new HttpListener();
 
-		private Uri? mostRecentReceivedUrl;
+		private Uri?    mostRecentReceivedUrl;
+		private byte[]? privateKey;
 
 		public Uri? MostRecentReceivedUrl
 		{
@@ -38,11 +47,24 @@ namespace WebAutoType.Vivaldi
 			}
 		}
 
-		public void Start()
+		public void Start(IPluginHost pluginHost)
 		{
-			const string METHOD_PATH = "/webautotype/activeurl/";
-			httpServer.Prefixes.Add(new UriBuilder("http", "127.0.0.1", ListeningPort, METHOD_PATH).ToString());
-			httpServer.Prefixes.Add(new UriBuilder("http", "[::1]", ListeningPort, METHOD_PATH).ToString());
+			SodiumCore.Init();
+			string? privateKeyBase64 = pluginHost.CustomConfig.GetString(PrivateKeyConfigName);
+			if (privateKeyBase64 != null)
+			{
+				privateKey = Utilities.Base64ToBinary(StrUtil.Deobfuscate(privateKeyBase64), null, Base64Variant);
+			}
+			else
+			{
+				privateKey = SecretBox.GenerateKey();
+				privateKeyBase64 = Utilities.BinaryToBase64(privateKey, Base64Variant);
+				pluginHost.CustomConfig.SetString(PrivateKeyConfigName, StrUtil.Obfuscate(privateKeyBase64));
+				MessageBox.Show($"Generated new private key for WebAutoType to receive active URL from Vivaldi. Please set it in Vivaldi:\n\n1.Go to vivaldi://extensions\n2. Ensure Developer Mode is enabled.\n3. Ensure the WebAutoType extension is installed. If not, drag the .crx file into the Extensions page.\n4. Under WebAutoType › Inspect Views, click background.html\n5. Go to the Console tab of DevTools.\n6. Paste and run the following command: chrome.storage.local.set({{ 'WebAutoType.VivaldiUrlReceiver.PrivateKey': '{privateKeyBase64}' }})\n\n(hint: you can copy this dialog text with Ctrl+C)", "WebAutoType", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			}
+
+			httpServer.Prefixes.Add(new UriBuilder("http", "127.0.0.1", ListeningPort, MethodPath).ToString());
+			httpServer.Prefixes.Add(new UriBuilder("http", "[::1]", ListeningPort, MethodPath).ToString());
 			httpServer.IgnoreWriteExceptions = true;
 			httpServer.Start();
 
@@ -105,7 +127,34 @@ namespace WebAutoType.Vivaldi
 				EnsureAuthorized(request);
 				IDictionary<string, string> body = await ParseFormBody(request);
 
-				if (!(body["activeUrl"] is string activeUrlString) || !Uri.TryCreate(activeUrlString, UriKind.Absolute, out Uri activeUrl))
+				string? ciphertextBase64 = body["activeUrlEncrypted"];
+				string? nonceBase64 = body["nonce"];
+
+				if (ciphertextBase64 == null || nonceBase64 == null)
+				{
+					return 400;
+				}
+				else if (privateKey == null)
+				{
+					return 500;
+				}
+
+				byte[] ciphertext = Utilities.Base64ToBinary(ciphertextBase64, null, Base64Variant);
+				byte[] nonce = Utilities.Base64ToBinary(nonceBase64, null, Base64Variant);
+
+				byte[] cleartext;
+				try
+				{
+					cleartext = SecretAeadXChaCha20Poly1305.Decrypt(ciphertext, nonce, privateKey);
+				}
+				catch (Exception e) when (!(e is OutOfMemoryException))
+				{
+					return 400;
+				}
+
+				string activeUrlString = Encoding.UTF8.GetString(cleartext);
+
+				if (!Uri.TryCreate(activeUrlString, UriKind.Absolute, out Uri activeUrl))
 				{
 					return 400;
 				}
@@ -121,8 +170,8 @@ namespace WebAutoType.Vivaldi
 
 		private static void EnsureAuthorized(HttpListenerRequest request)
 		{
-			if (request.Headers["Origin"] == "chrome-extension://mpognobbkildjkofajifpdfhcoklimli" && // pages send https://blah, browser.html sends the big honking Vivaldi extension URI
-			    request.Headers["Sec-Fetch-Site"] == "none") // pages send "cross-site", browser.html sends "none"
+			if (request.Headers["Origin"] == "chrome-extension://bpikannkbkpbglmojcajbepbemdlpdhc" && // pages send https://blah, WebAutoType extension background.html sends the big honking extension URI
+				request.Headers["Sec-Fetch-Site"] == "none")                                          // pages send "cross-site", background.html sends "none"
 			{
 				//request is probably coming from the browser.html pages and not some other website, so allow the request
 			}
@@ -164,4 +213,5 @@ namespace WebAutoType.Vivaldi
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 	}
+
 }
